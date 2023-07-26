@@ -21,21 +21,12 @@ public class ReadConfiguration {
      * <p></p>
      * @param configurationFilePath the path to the configuration file
      */
-    public void readConfiguration(String configurationFilePath) {
+    public ConfigurationJson readConfiguration(String configurationFilePath) throws IOException {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
         File file = new File(configurationFilePath);
 
-        try {
-
-
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return objectMapper.readValue(file, ConfigurationJson.class);
     }
-
-
 }

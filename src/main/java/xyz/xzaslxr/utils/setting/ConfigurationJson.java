@@ -19,14 +19,16 @@ public class ConfigurationJson {
      */
     private String sinkMethodName;
 
-
     /**
      * edges，描述edges信息，包含 fromMethod -{Call}-> toMethod 的调用信息。
-     * <p></p>
+     */
+    // private HashMap<String, String> edges;
+
+    /**
+     * distanceEdges, 描述 fromMethod -{Call} - {DistanceToSource}-> toMethod 的调用信息。
      * Todo: 在2.0中，需要支持 distance 信息，即当前edge 涉及到的 BasicBlock 与 Source 的距离信息
      */
-    private HashMap<String, String> edges;
+    // private HashMap<Integer, HashMap<String, String>> distanceEdges;
 
-
-
+    private PropertyTreeNode propertyTreeNode;
 }
