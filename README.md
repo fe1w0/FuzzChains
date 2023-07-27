@@ -49,5 +49,32 @@ SerHybrid 和 GCMiner 的 fuzzing 部分中，在一开始都有一个 SerChecke
 - [ ] 重点测试，JQF 能否拓展到 基于属性的复杂实例化的fuzzing
 - [ ] 插桩
 
+### 2023-07-28
+
+Questions:
+- JQF how to load `-Dclass` with jar files.
+  - 这个问题，今天就需要解决
+  - 换句话说，我需要在 mvn 指令中 添加 jar 的功能。
+  - 解决方案:
+    - 利用 Assembly 插件
+      - https://stackoverflow.com/questions/36047637/how-can-i-include-test-classes-into-maven-jar-and-execute-them
+      - https://github.com/rohanpadhye/JQF/issues/52
+      - https://github.com/fuzzitdev/example-java
+- how to confirm which `method` will be fuzzed.
+  - 最大的问题，不太清楚，JQF 如何执行 `run(Program, inputs)`
+  - 有了，从`writeObject()`开始
+
+##### Question One:
+
+还是有点乱。
 
 
+从目的开始，最终执行
+```bash
+java -jar build.jar xyz.xzaslxr.fuzzing.FuzzChainsTest fuzz
+```
+
+不管了，先完成最最最最基本的功能再说其他的。
+
+
+- [ ] 手动测试，手动加入 example.jar
