@@ -1,7 +1,5 @@
 package xyz.xzaslxr.utils.setting;
 
-import java.util.HashMap;
-
 public class ConfigurationJson {
 
     /**

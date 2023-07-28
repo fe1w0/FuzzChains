@@ -71,7 +71,7 @@ Questions:
 
 从目的开始，最终执行
 ```bash
-java -jar build.jar xyz.xzaslxr.fuzzing.FuzzChainsTest fuzz
+java -jar build.jar xyz.fuzzing.xyz.xzaslxr.FuzzChainsTest fuzz
 ```
 
 不管了，先完成最最最最基本的功能再说其他的。
