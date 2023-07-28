@@ -17,6 +17,7 @@ import xyz.xzaslxr.utils.generator.ObjectInputStreamGenerator;
 
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
+import static xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator.getFieldFromObject;
 
 
 /**
@@ -31,10 +32,6 @@ public class FuzzChainsTest {
 
     private final String magicWords = "FuzzChains@fe1w0";
 
-    // 设置加载 FuzzChains
-    // static {
-    //     // System.out.println("Start FuzzChains");
-    // }
 
     @Before
     public void setUp() {
@@ -114,22 +111,47 @@ public class FuzzChainsTest {
 
     }
 
+
+    public ByteArrayOutputStream copyByteArrayInputStream(ByteArrayInputStream byteArrayInputStream) throws IOException {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            // 定义一个缓存数组，临时存放读取的数组
+            //经过测试，4*1024是一个非常不错的数字，过大过小都会比较影响性能
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length= byteArrayInputStream.read(buffer)) > -1) {
+                baos.write(buffer, 0, length);
+            }
+            baos.flush();
+            return baos;
+        } catch (IOException e) {
+            throw new IOException(e);
+        }
+    }
+
     /**
      * 与 fuzz 不同，reportFuzz 是用于fuzz得到的seed, 保存危险的Object
-     * @param byteArrayInputStream
+     * @param inputStream
      * @throws IOException
      * @throws ClassNotFoundException
      */
     @Fuzz
-    public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws IOException, ClassNotFoundException, URISyntaxException {
+    public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws IOException, ClassNotFoundException, URISyntaxException {
         String saveFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/poc.ser";
 
-        ByteArrayInputStream saveStream = byteArrayInputStream;
+        saveFilePath = "/home/fe1w0/SoftwareAnalysis/DynamicAnalysis/FuzzChains/DataSet/output/poc.ser";
+
+        ByteArrayOutputStream copyOutputStream = copyByteArrayInputStream(inputStream);
+
+        ByteArrayInputStream saveStream = new ByteArrayInputStream(copyOutputStream.toByteArray());
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(copyOutputStream.toByteArray());
 
         ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
 
+
+
         // 反序列化
-        objectInputStream.readObject();
+        Object object = objectInputStream.readObject();
 
         byteArrayInputStream.close();
         objectInputStream.close();
@@ -140,13 +162,24 @@ public class FuzzChainsTest {
         // 恢复输出
         System.setOut(standardOut);
 
+        System.out.println(outputStreamCaptor.toString().trim());
+
         System.out.println("isExploitable:" + isExploitable);
+
+        System.out.println(
+                "sources.demo.ExpOne$size: "
+                +
+                getFieldFromObject("sources.demo.ExpOne", getFieldFromObject("sources.serialize.UnsafeSerialize", object, "chainOne"), "size")
+        );
 
         if (isExploitable) {
             // 保存 objectInputStream
             saveByteArrayInputStream(saveFilePath, saveStream);
             // 触发 assumeFalse
             assumeFalse(true);
+        } else {
+            saveFilePath = "/home/fe1w0/SoftwareAnalysis/DynamicAnalysis/FuzzChains/DataSet/output/no-poc.ser";
+            saveByteArrayInputStream(saveFilePath, saveStream);
         }
     }
 }

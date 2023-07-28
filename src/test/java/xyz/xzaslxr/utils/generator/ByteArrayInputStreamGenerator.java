@@ -62,6 +62,27 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
         return rootObject;
     }
 
+    public static Object getFieldFromObject(String className, Object object, String fieldName) {
+        try {
+            Class rootClass =  Class.forName(className);
+
+            Field rootField = rootClass.getDeclaredField(fieldName);
+            rootField.setAccessible(true);
+
+
+            Object field = rootField.get(object);
+
+            return field;
+
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public ByteArrayInputStreamGenerator() {
         // Register the type of objects that we can create
         super(ByteArrayInputStream.class);
@@ -98,7 +119,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
          * sources.serialize.UnsafeSerialize
          *      .chainOne
          *          -> sources.demo.ExpOne
-         *
+         *              .size $ means importance
          *      .chainTwo
          *          -> sources.demo.ExpTwo
          */
