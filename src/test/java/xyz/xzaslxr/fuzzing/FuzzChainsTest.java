@@ -12,6 +12,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.junit.runner.RunWith;
+import xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator;
 import xyz.xzaslxr.utils.generator.ObjectInputStreamGenerator;
 
 import static org.junit.Assume.assumeFalse;
@@ -48,35 +49,15 @@ public class FuzzChainsTest {
         // System.out.println(outputStreamCaptor.toString().trim().contains(magicWords));
     }
 
-
-
-    public void saveObjectInputStream(String filePath, ObjectInputStream inputStream) {
-        try {
-            if (filePath != "") {
-                FileOutputStream fileOut = new FileOutputStream(filePath);
-                ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
-
-                // 从 ObjectInputStream 读取对象，并写入到文件
-                Object obj;
-                while ((obj = inputStream.readObject()) != null) {
-                    objectOut.writeObject(obj);
-                }
-                objectOut.close();
-                fileOut.close();
-                System.out.println("ObjectInputStream 已成功保存到文件: " + filePath);
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("保存 ObjectInputStream 时出现错误: " + e.getMessage());
-        }
-    }
-
     @Fuzz
-    public void fuzz(@From(ObjectInputStreamGenerator.class) ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
+    public void fuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws IOException, ClassNotFoundException {
         // 屏蔽输出
         System.setOut(new PrintStream(outputStreamCaptor));
 
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+
         // 反序列化
-        inputStream.readObject();
+        objectInputStream.readObject();
 
         // 检验插桩， 若触发插桩，则 isExploitable = true;
         Boolean isExploitable = outputStreamCaptor.toString().trim().contains(magicWords);
@@ -97,19 +78,61 @@ public class FuzzChainsTest {
         return jarFilePath;
     }
 
+    public void saveByteArrayInputStream(String filePath, ByteArrayInputStream byteArrayInputStream) {
+        try{
+            if (filePath.isEmpty()) {
+                System.out.println("文件路径不能为空");
+                return;
+            }
+
+            if (byteArrayInputStream.available() > 0){
+                System.out.println("有效");
+            }
+
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = byteArrayInputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
+            }
+
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+
+            FileOutputStream fileOutputStream = new FileOutputStream(filePath);
+            fileOutputStream.write(byteArray);
+            fileOutputStream.flush();
+
+            byteArrayOutputStream.close();
+            byteArrayInputStream.close();
+
+
+            System.out.println("保存: " + filePath + " 成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     /**
      * 与 fuzz 不同，reportFuzz 是用于fuzz得到的seed, 保存危险的Object
-     * @param inputStream
+     * @param byteArrayInputStream
      * @throws IOException
      * @throws ClassNotFoundException
      */
     @Fuzz
-    public void reportFuzz(@From(ObjectInputStreamGenerator.class) ObjectInputStream inputStream) throws IOException, ClassNotFoundException, URISyntaxException {
+    public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws IOException, ClassNotFoundException, URISyntaxException {
         String saveFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/poc.ser";
 
+        ByteArrayInputStream saveStream = byteArrayInputStream;
+
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+
         // 反序列化
-        inputStream.readObject();
+        objectInputStream.readObject();
+
+        byteArrayInputStream.close();
+        objectInputStream.close();
 
         // 检验插桩， 若触发插桩，则 isExploitable = true;
         Boolean isExploitable = outputStreamCaptor.toString().trim().contains(magicWords);
@@ -117,11 +140,11 @@ public class FuzzChainsTest {
         // 恢复输出
         System.setOut(standardOut);
 
-        System.out.println(isExploitable);
+        System.out.println("isExploitable:" + isExploitable);
 
         if (isExploitable) {
             // 保存 objectInputStream
-            saveObjectInputStream(saveFilePath, inputStream);
+            saveByteArrayInputStream(saveFilePath, saveStream);
             // 触发 assumeFalse
             assumeFalse(true);
         }

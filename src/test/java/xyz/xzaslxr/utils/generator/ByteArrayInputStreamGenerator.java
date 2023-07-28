@@ -9,7 +9,7 @@ import java.io.*;
 import java.lang.reflect.Field;
 
 
-public class ObjectInputStreamGenerator extends Generator<ObjectInputStream> {
+public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStream> {
 
     /**
      * 实例化 className
@@ -62,17 +62,12 @@ public class ObjectInputStreamGenerator extends Generator<ObjectInputStream> {
         return rootObject;
     }
 
-    public ObjectInputStreamGenerator() {
+    public ByteArrayInputStreamGenerator() {
         // Register the type of objects that we can create
-        super(ObjectInputStream.class);
+        super(ByteArrayInputStream.class);
     }
 
-    /**
-     * 将 Object 转为 ObjectInputStream
-     * @param object
-     * @return ObjectInputStream
-     */
-    public ObjectInputStream objectToObjectInputStream(Object object) {
+    public ByteArrayInputStream objectToByteArrayInputStream(Object object) {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
@@ -80,8 +75,9 @@ public class ObjectInputStreamGenerator extends Generator<ObjectInputStream> {
             objectOutputStream.writeObject(object);
             objectOutputStream.flush();
 
+
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-            return new ObjectInputStream(byteArrayInputStream);
+            return byteArrayInputStream;
         } catch (Exception e) {
             e.printStackTrace();
 
@@ -90,7 +86,7 @@ public class ObjectInputStreamGenerator extends Generator<ObjectInputStream> {
     }
 
     @Override
-    public ObjectInputStream generate(SourceOfRandomness random, GenerationStatus __ignore__) {
+    public ByteArrayInputStream generate(SourceOfRandomness random, GenerationStatus __ignore__) {
         // 获得 构造函数
         // 需要注意，FuzzChains只能根据json数据，知道涉及的class和 fields 是哪些。
         // 需要提供 下面处理:
@@ -139,10 +135,11 @@ public class ObjectInputStreamGenerator extends Generator<ObjectInputStream> {
         // 序列化:
         // rootObject -> ObjectInputStream
 
-        ObjectInputStream genObjectInputStream = objectToObjectInputStream(rootObject);
+        ByteArrayInputStream genByteArrayInputStream = objectToByteArrayInputStream(rootObject);
 
         // 关闭"屏蔽输出"功能
         System.setOut(standardOut);
-        return genObjectInputStream;
+
+        return genByteArrayInputStream;
     }
 }
