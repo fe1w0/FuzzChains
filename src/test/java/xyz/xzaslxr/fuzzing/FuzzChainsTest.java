@@ -32,7 +32,6 @@ public class FuzzChainsTest {
 
     private final String magicWords = "FuzzChains@fe1w0";
 
-
     @Before
     public void setUp() {
         // 每次 runProgram 前，将之后的输出转到 outputStreamCaptor
@@ -41,27 +40,28 @@ public class FuzzChainsTest {
 
     @After
     public void tearDown() {
-        // 恢复正常输出
+        // 恢复输出
         System.setOut(standardOut);
-        // System.out.println(outputStreamCaptor.toString().trim().contains(magicWords));
     }
 
     @Fuzz
-    public void fuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws IOException, ClassNotFoundException {
-        // 屏蔽输出
-        System.setOut(new PrintStream(outputStreamCaptor));
-
-        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-
-        // 反序列化
-        objectInputStream.readObject();
+    public void fuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws Exception {
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+            // 反序列化
+            objectInputStream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         // 检验插桩， 若触发插桩，则 isExploitable = true;
         Boolean isExploitable = outputStreamCaptor.toString().trim().contains(magicWords);
 
         // 触发 assumeFalse
         if (isExploitable) {
-            assumeFalse(true);
+            // 对于 Poc 生成来说，需要 assumeFalse(false); 引导 POC 的生成
+            assumeFalse(false);
+            throw new Exception("This Object is Exploitable.");
         }
     }
 
@@ -136,10 +136,12 @@ public class FuzzChainsTest {
      * @throws ClassNotFoundException
      */
     @Fuzz
-    public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws IOException, ClassNotFoundException, URISyntaxException {
-        String saveFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/poc.ser";
+    public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws IOException, ClassNotFoundException {
+        String rootPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/";
 
-        saveFilePath = "/home/fe1w0/SoftwareAnalysis/DynamicAnalysis/FuzzChains/DataSet/output/poc.ser";
+        // rootPath = "/home/fe1w0/SoftwareAnalysis/DynamicAnalysis/FuzzChains/DataSet/output/";
+
+        String saveFilePath = rootPath + "poc.ser";
 
         ByteArrayOutputStream copyOutputStream = copyByteArrayInputStream(inputStream);
 
@@ -147,8 +149,6 @@ public class FuzzChainsTest {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(copyOutputStream.toByteArray());
 
         ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-
-
 
         // 反序列化
         Object object = objectInputStream.readObject();
@@ -175,10 +175,11 @@ public class FuzzChainsTest {
         if (isExploitable) {
             // 保存 objectInputStream
             saveByteArrayInputStream(saveFilePath, saveStream);
-            // 触发 assumeFalse
-            assumeFalse(true);
+            // 触发 assumeFalse(false);
+            assumeFalse(false);
         } else {
-            saveFilePath = "/home/fe1w0/SoftwareAnalysis/DynamicAnalysis/FuzzChains/DataSet/output/no-poc.ser";
+            assumeFalse(true);
+            saveFilePath = rootPath + "no-poc.ser";
             saveByteArrayInputStream(saveFilePath, saveStream);
         }
     }

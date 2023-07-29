@@ -7,6 +7,7 @@
 ```bash
 # SerializationDumper.jar
 git clone https://github.com/NickstaDB/SerializationDumper.git
+cd SerializationDumper
 build.sh
 
 # 修改 diff.sh 中的 SerDumpJar
