@@ -7,11 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-
-/**
- *
- */
-
 public class PropertyTreeNode {
 
     /**
@@ -28,15 +23,12 @@ public class PropertyTreeNode {
 
     private List<PropertyTreeNode> fields;
 
-
-
     public PropertyTreeNode(String label, String className, String fieldName, List<PropertyTreeNode> fields) {
         this.label = label;
         this.className = className;
         this.fieldName = fieldName;
         this.fields = fields;
     }
-
 
     /**
      * 初始化 PropertyTreeNode.
@@ -52,6 +44,12 @@ public class PropertyTreeNode {
         this.fields = new ArrayList<PropertyTreeNode>();
     }
 
+    public PropertyTreeNode() {
+        this.label = null;
+        this.className = null;
+        this.fieldName = null;
+        this.fields = null;
+    }
 
     public String getLabel() {
         return label;
@@ -85,6 +83,17 @@ public class PropertyTreeNode {
         this.fields = fields;
     }
 
+    public String toString() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = null;
+        try {
+            json = objectMapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return json;
+    }
+
     public static void main(String[] args) throws JsonProcessingException {
 
         PropertyTreeNode sizeField = new PropertyTreeNode("PRIORITY", "java.lang.Integer", "size");
@@ -105,10 +114,8 @@ public class PropertyTreeNode {
 
         ObjectMapper objectMapper = new ObjectMapper();
         String json = objectMapper.writeValueAsString(root);
+
         System.out.println(json);
 
     }
-
-
-
 }

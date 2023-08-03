@@ -124,6 +124,9 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
          *          -> sources.demo.ExpTwo
          */
 
+
+
+
         // 关闭 generate 过程中，可能会出现的 print
         PrintStream standardOut = System.out;
         ByteArrayOutputStream genOutputStreamCaptor = new ByteArrayOutputStream();

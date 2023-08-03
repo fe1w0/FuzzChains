@@ -13,7 +13,6 @@ import java.net.URL;
 
 import org.junit.runner.RunWith;
 import xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator;
-import xyz.xzaslxr.utils.generator.ObjectInputStreamGenerator;
 
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
