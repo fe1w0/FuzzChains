@@ -1,0 +1,26 @@
+{
+  "label": "ROOT",
+  "className": "sources.serialize.UnsafeSerialize",
+  "fieldName": null,
+  "fields": [
+    {
+      "label": "ORDINARY",
+      "className": "sources.demo.ExpOne",
+      "fieldName": "chainOne",
+      "fields": [
+        {
+          "label": "PRIORITY",
+          "className": "java.lang.Integer",
+          "fieldName": "size",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "label": "ORDINARY",
+      "className": "sources.demo.ExpTwo",
+      "fieldName": "chainTwo",
+      "fields": []
+    }
+  ]
+}

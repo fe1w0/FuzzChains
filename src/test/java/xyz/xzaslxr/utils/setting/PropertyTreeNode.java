@@ -4,71 +4,111 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+
+/**
+ *
+ */
 
 public class PropertyTreeNode {
 
-    private String currentClassName;
+    /**
+     * Node的label分为三类:
+     * <p>1. ROOT </p>
+     * <p>2. ORDINARY</p>
+     * <p>3. PRIORITY</p>
+     */
+    private String label;
 
-    private String parentClassFieldName;
+    private String className;
 
-    private List<PropertyTreeNode> propertyTreeNodes;
+    private  String fieldName;
 
-    public PropertyTreeNode(String currentClassName, String parentClassFieldName) {
-        this.currentClassName = currentClassName;
-        this.parentClassFieldName = parentClassFieldName;
-        this.propertyTreeNodes = new ArrayList<PropertyTreeNode>();
+    private List<PropertyTreeNode> fields;
+
+
+
+    public PropertyTreeNode(String label, String className, String fieldName, List<PropertyTreeNode> fields) {
+        this.label = label;
+        this.className = className;
+        this.fieldName = fieldName;
+        this.fields = fields;
     }
 
-    public String getCurrentClassName() {
-        return currentClassName;
+
+    /**
+     * 初始化 PropertyTreeNode.
+     * <p>label: "Root"</p>
+     * @param label
+     * @param className
+     * @param fieldName
+     */
+    public PropertyTreeNode(String label, String className, String fieldName) {
+        this.label = label;
+        this.className = className;
+        this.fieldName = fieldName;
+        this.fields = new ArrayList<PropertyTreeNode>();
     }
 
-    public void setCurrentClassName(String currentClassName) {
-        this.currentClassName = currentClassName;
+
+    public String getLabel() {
+        return label;
     }
 
-    public String getParentClassFieldName() {
-        return parentClassFieldName;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
-    public void setParentClassFieldName(String parentClassFieldName) {
-        this.parentClassFieldName = parentClassFieldName;
+    public String getClassName() {
+        return className;
     }
 
-    public void setPropertyTreeNodes(List<PropertyTreeNode> propertyTreeNodes) {
-        this.propertyTreeNodes = propertyTreeNodes;
+    public void setClassName(String className) {
+        this.className = className;
     }
 
-    public List<PropertyTreeNode> getPropertyTreeNodes() {
-        return propertyTreeNodes;
+    public String getFieldName() {
+        return fieldName;
     }
 
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    public List<PropertyTreeNode> getFields() {
+        return fields;
+    }
+
+    public void setFields(List<PropertyTreeNode> fields) {
+        this.fields = fields;
+    }
 
     public static void main(String[] args) throws JsonProcessingException {
-        PropertyTreeNode root = new PropertyTreeNode("SourceClass", "NULL");
 
-        PropertyTreeNode rootChildrenOne = new PropertyTreeNode("FirstChild", "OneField");
+        PropertyTreeNode sizeField = new PropertyTreeNode("PRIORITY", "java.lang.Integer", "size");
 
-        PropertyTreeNode rootChildrenTwo = new PropertyTreeNode("SecondChild", "TwoField");
+        List<PropertyTreeNode> tmpFieldList = new ArrayList<>();
+        tmpFieldList.add(sizeField);
 
-        PropertyTreeNode rootGrandChildOneOne = new PropertyTreeNode("GrandChildOne", "Grand");
+        PropertyTreeNode chainOne = new PropertyTreeNode("ORDINARY", "sources.demo.ExpOne", "chainOne", tmpFieldList);
 
-        PropertyTreeNode rootGrandChildTwoTwo = new PropertyTreeNode("GrandChildTwo", "Grand");
+        PropertyTreeNode chainTwo = new PropertyTreeNode("ORDINARY", "sources.demo.ExpTwo", "chainTwo");
 
-        root.getPropertyTreeNodes().add(rootChildrenOne);
+        List<PropertyTreeNode> newTmpFieldList = new ArrayList<>();
+        newTmpFieldList.add(chainOne);
+        newTmpFieldList.add(chainTwo);
 
-        root.getPropertyTreeNodes().add(rootChildrenTwo);
-
-
-        rootChildrenOne.getPropertyTreeNodes().add(rootGrandChildOneOne);
-
-        rootChildrenTwo.getPropertyTreeNodes().add(rootGrandChildTwoTwo);
+        PropertyTreeNode root = new PropertyTreeNode("ROOT", "sources.serialize.UnsafeSerialize", null, newTmpFieldList);
 
 
         ObjectMapper objectMapper = new ObjectMapper();
         String json = objectMapper.writeValueAsString(root);
         System.out.println(json);
+
     }
+
+
 
 }

@@ -2,6 +2,7 @@ package xyz.xzaslxr.utils.setting;
 
 public class ConfigurationJson {
 
+
     /**
      * chainId，用于描述当前任务
      */
