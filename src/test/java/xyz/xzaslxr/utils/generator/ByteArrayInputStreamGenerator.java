@@ -161,9 +161,8 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
                 case "java.lang.Integer":
                     iProduct.fieldName = propertyFieldName;
                     iProduct.fieldObject = random.nextInt(maxNumber);
-
-                    //
                     break;
+
                 default:
                     iProduct.fieldName = propertyFieldName;
                     iProduct.fieldObject = objectInstance(propertyFieldClassName);
