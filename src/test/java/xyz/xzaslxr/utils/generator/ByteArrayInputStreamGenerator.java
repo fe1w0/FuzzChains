@@ -4,19 +4,34 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import sun.misc.Unsafe;
+import xyz.xzaslxr.utils.setting.PropertyTreeNode;
+import xyz.xzaslxr.utils.setting.ReadConfiguration;
+import xyz.xzaslxr.utils.setting.ReadPropertyTreeConfigure;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 
 public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStream> {
+
+    public static ArrayList<String> validRandomFieldClasses = new ArrayList<String>(
+            List.of(
+                    "java.lang.Integer"
+            )
+    );
+
+    // Random number 的值域: [0, 100)
+    public static Integer maxNumber = 100;
 
     /**
      * 实例化 className
      * @param className
      * @return
      * @param <className>
-     * @throws Exception
      */
     public static <className> Object objectInstance(String className){
         className instantiatedObject = (className) new Object();
@@ -74,11 +89,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
 
             return field;
 
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -106,6 +117,98 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
         return null;
     }
 
+    /**
+     * generateFromPropertyTree 递归过程中产生的临时结构
+     */
+    class IntermediateProduct{
+        String fieldName;
+        Object fieldObject;
+
+        IntermediateProduct() {
+            fieldName = null;
+            fieldObject = null;
+        }
+
+        boolean isEmpty() {
+            return fieldName == null && fieldObject == null;
+        }
+
+        boolean isRoot() {
+            return fieldName == null && fieldObject != null;
+        }
+    }
+
+    /**
+     * 根据propertyTree生成对象，并设置Random，以用于Fuzzing
+     * @param propertyTree
+     * @return
+     */
+    public IntermediateProduct generateFromPropertyTree(SourceOfRandomness random, PropertyTreeNode propertyTree) {
+
+        IntermediateProduct iProduct = new IntermediateProduct();
+
+        if (propertyTree.isEmpty()) {
+            // 若 propertyTree 为空
+            return null;
+        } else if (propertyTree.getFields().isEmpty()) {
+            // 若 propertyTree 的 fields 为空
+            // 只 create 单个个体，且不赋值
+
+            String propertyFieldClassName = propertyTree.getClassName();
+            String propertyFieldName = propertyTree.getFieldName();
+
+            switch (propertyFieldClassName) {
+                case "java.lang.Integer":
+                    iProduct.fieldName = propertyFieldName;
+                    iProduct.fieldObject = random.nextInt(maxNumber);
+                default:
+                    iProduct.fieldName = propertyFieldName;
+                    iProduct.fieldObject = objectInstance(propertyFieldClassName);
+            }
+        } else {
+            // 若 propertyTree 的 fields 为非空
+            String propertyFieldClassName = propertyTree.getClassName();
+            String propertyFieldName = propertyTree.getFieldName();
+
+            // 创建 root 对象
+            Object root = objectInstance(propertyFieldClassName);
+
+            // 设置 root 对象的变量
+            for (PropertyTreeNode node : propertyTree.getFields()) {
+                IntermediateProduct tmpIProduct = generateFromPropertyTree(random, node);
+                setFieldTree(propertyFieldClassName, root,
+                        tmpIProduct.fieldName, tmpIProduct.fieldObject);
+            }
+
+            // 设置 iProduct
+            iProduct.fieldName = propertyFieldName;
+            iProduct.fieldObject = root;
+        }
+
+        if (!iProduct.isEmpty()) {
+            return iProduct;
+        } else {
+            return null;
+        }
+    }
+
+
+    public static void main(String[] args) {
+        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
+
+        ReadConfiguration reader = new ReadPropertyTreeConfigure();
+        PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());
+
+        ByteArrayInputStreamGenerator byteArrayInputStreamGenerator = new ByteArrayInputStreamGenerator();
+
+
+        IntermediateProduct iProduct = byteArrayInputStreamGenerator.generateFromPropertyTree(new SourceOfRandomness(new Random()), root);
+
+        System.out.println(root);
+
+    }
+
+
     @Override
     public ByteArrayInputStream generate(SourceOfRandomness random, GenerationStatus __ignore__) {
         // 获得 构造函数
@@ -124,37 +227,24 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
          *          -> sources.demo.ExpTwo
          */
 
-
-
-
         // 关闭 generate 过程中，可能会出现的 print
         PrintStream standardOut = System.out;
         ByteArrayOutputStream genOutputStreamCaptor = new ByteArrayOutputStream();
         System.setOut(new PrintStream(genOutputStreamCaptor));
 
-        String leafOneName = "sources.demo.ExpOne";
-        String leafOneFromFieldName = "chainOne";
-        String rootClassName = "sources.serialize.UnsafeSerialize";
-        String leafTwoName = "sources.demo.ExpTwo";
-        String leafTwoFromFieldName = "chainTwo";
+        // 读取 PropertyTree 文件
+        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
 
-        // 1. 创建 rootObject
-        Object rootObject = objectInstance(rootClassName);
+        ReadConfiguration reader = new ReadPropertyTreeConfigure();
+        PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());
 
-        // 2. 创建 leafObject
-        Object leafOneObject = objectInstance(leafOneName);
+        IntermediateProduct iProduct = generateFromPropertyTree(random, root);
 
-        // 2.1 leafOneObject 中 size 是敏感属性:
+        Object rootObject = null;
 
-        // Size  = [0, 100]
-        Integer leafOneSize = random.nextInt(100);
-        leafOneObject = setFieldTree(leafOneName, leafOneObject, "size", leafOneSize);
-
-        Object leafTwoObject = objectInstance(leafTwoName);
-
-        // 3. 设置 rootObject.field = leafObject
-        rootObject = setFieldTree(rootClassName, rootObject, leafOneFromFieldName, leafOneObject);
-        rootObject = setFieldTree(rootClassName, rootObject, leafTwoFromFieldName, leafTwoObject);
+        if (iProduct.isRoot()) {
+            rootObject = iProduct.fieldObject;
+        }
 
         // 序列化:
         // rootObject -> ObjectInputStream

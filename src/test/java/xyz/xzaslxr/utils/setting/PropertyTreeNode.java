@@ -3,9 +3,7 @@ package xyz.xzaslxr.utils.setting;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class PropertyTreeNode {
 
@@ -44,6 +42,10 @@ public class PropertyTreeNode {
         this.fields = new ArrayList<PropertyTreeNode>();
     }
 
+
+    /**
+     * 适用于 jackson 中 `fields = []` 的无参数构造，该 object 的所有成员变量都为`null`。
+     */
     public PropertyTreeNode() {
         this.label = null;
         this.className = null;
@@ -92,6 +94,45 @@ public class PropertyTreeNode {
             throw new RuntimeException(e);
         }
         return json;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object)
+            return true;
+        if (object == null || getClass() != object.getClass())
+            return false;
+        PropertyTreeNode that = (PropertyTreeNode) object;
+        return Objects.equals(label, that.label) && Objects.equals(className, that.className) && Objects.equals(fieldName, that.fieldName) && Objects.equals(fields, that.fields);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(label, className, fieldName, fields);
+    }
+
+    /**
+     * 若该object的所有成员变量都为`null`，则认为该object为空。
+     * @return
+     */
+
+    public boolean isEmpty() {
+        if (this.className == null && this.fieldName == null
+                && this.fields == null && this.label == null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 将 PropertyTree 转为 List<PropertyTreeNode>，便于递归构造FuzzGenerator
+     * @return
+     */
+    public List<PropertyTreeNode> convertDeque() {
+
+
+        return null;
     }
 
     public static void main(String[] args) throws JsonProcessingException {
