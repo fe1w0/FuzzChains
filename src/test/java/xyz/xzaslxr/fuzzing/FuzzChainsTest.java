@@ -56,7 +56,6 @@ public class FuzzChainsTest {
         // 检验插桩， 若触发插桩，则 isExploitable = true;
         Boolean isExploitable = outputStreamCaptor.toString().trim().contains(magicWords);
 
-        // 触发 assumeFalse
         if (isExploitable) {
             // 对于 Poc 生成来说，需要 assumeFalse(false); 引导 POC 的生成
             assumeFalse(false);

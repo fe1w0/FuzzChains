@@ -161,6 +161,9 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
                 case "java.lang.Integer":
                     iProduct.fieldName = propertyFieldName;
                     iProduct.fieldObject = random.nextInt(maxNumber);
+
+                    //
+                    break;
                 default:
                     iProduct.fieldName = propertyFieldName;
                     iProduct.fieldObject = objectInstance(propertyFieldClassName);
@@ -201,7 +204,6 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
 
         ByteArrayInputStreamGenerator byteArrayInputStreamGenerator = new ByteArrayInputStreamGenerator();
 
-
         IntermediateProduct iProduct = byteArrayInputStreamGenerator.generateFromPropertyTree(new SourceOfRandomness(new Random()), root);
 
         System.out.println(root);
@@ -217,15 +219,6 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
         // 1. 根据 提供的 className classLoader 获得 class
         // 2. 得到 class 之后，newInstance 后 设置 field
         // 3. 自下(2-阶)而上，从 leaves 依次向上设置 class，直到 root 为止
-
-        /**
-         * sources.serialize.UnsafeSerialize
-         *      .chainOne
-         *          -> sources.demo.ExpOne
-         *              .size $ means importance
-         *      .chainTwo
-         *          -> sources.demo.ExpTwo
-         */
 
         // 关闭 generate 过程中，可能会出现的 print
         PrintStream standardOut = System.out;

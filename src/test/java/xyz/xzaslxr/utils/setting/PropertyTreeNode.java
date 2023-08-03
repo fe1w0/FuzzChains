@@ -157,6 +157,5 @@ public class PropertyTreeNode {
         String json = objectMapper.writeValueAsString(root);
 
         System.out.println(json);
-
     }
 }
