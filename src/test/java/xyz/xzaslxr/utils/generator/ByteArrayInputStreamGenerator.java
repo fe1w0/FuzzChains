@@ -27,6 +27,12 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
     // Random number 的值域: [0, 100)
     public static Integer maxNumber = 100;
 
+    public static short minShort = 0;
+
+    public static short maxShort = 100;
+
+    public static short MAX_STRING_LENGTH = 20;
+
     /**
      * 实例化 className
      * @param className
@@ -157,14 +163,50 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
             String propertyFieldClassName = propertyTree.getClassName();
             String propertyFieldName = propertyTree.getFieldName();
 
+            iProduct.fieldName = propertyFieldName;
+
             switch (propertyFieldClassName) {
                 case "java.lang.Integer":
-                    iProduct.fieldName = propertyFieldName;
                     iProduct.fieldObject = random.nextInt(maxNumber);
                     break;
 
+                case "java.lang.Long":
+                    iProduct.fieldObject = random.nextLong();
+                    break;
+
+                case "java.lang.Short":
+                    iProduct.fieldObject = random.nextShort(minShort, maxShort);
+                    break;
+
+                case "java.lang.Double":
+                    iProduct.fieldObject = random.nextDouble();
+                    break;
+
+                case "java.lang.Float":
+                    iProduct.fieldObject = random.nextFloat();
+                    break;
+
+                case "java.lang.Byte":
+                    iProduct.fieldObject = random.nextByte((byte) 0, (byte) 127);
+                    break;
+
+                case "java.lang.Character":
+                    // iProduct.fieldObject = random.nextChar(Character.MIN_VALUE, Character.MAX_VALUE);
+                    iProduct.fieldObject = random.nextChar((char) 0, (char) 127);
+                    break;
+
+                case "java.lang.Boolean":
+                    iProduct.fieldObject = random.nextBoolean();
+                    break;
+
+                case "java.lang.String":
+                    int stringLength = random.nextInt(MAX_STRING_LENGTH);
+                    String tmpString = new String();
+                    for (int  i = 0; i < stringLength; i++) {
+                        tmpString = tmpString + String.valueOf(random.nextChar((char) 0, (char) 127));
+                    }
+                    iProduct.fieldObject = tmpString;
                 default:
-                    iProduct.fieldName = propertyFieldName;
                     iProduct.fieldObject = objectInstance(propertyFieldClassName);
             }
         } else {
