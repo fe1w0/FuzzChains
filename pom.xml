@@ -48,8 +48,8 @@
         </dependency>
 
         <dependency>
-            <groupId>xyz.xzaslxr</groupId>
-            <artifactId>Example</artifactId>
+            <groupId>example</groupId>
+            <artifactId>xyz-xzaslxr</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>
@@ -61,6 +61,7 @@
             <url>file://${basedir}/otherLib/</url>
             <releases>
                 <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
             </releases>
             <snapshots>
                 <enabled>true</enabled>

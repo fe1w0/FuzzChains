@@ -134,7 +134,7 @@ public class FuzzChainsTest {
      * @throws ClassNotFoundException
      */
     @Fuzz
-    public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws IOException, ClassNotFoundException {
+    public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws Exception {
         String rootPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/";
 
         // rootPath = "/home/fe1w0/SoftwareAnalysis/DynamicAnalysis/FuzzChains/DataSet/output/";
@@ -175,6 +175,7 @@ public class FuzzChainsTest {
             saveByteArrayInputStream(saveFilePath, saveStream);
             // 触发 assumeFalse(false);
             assumeFalse(false);
+            throw new Exception("This Object is Exploitable.");
         } else {
             assumeFalse(true);
             saveFilePath = rootPath + "no-poc.ser";
