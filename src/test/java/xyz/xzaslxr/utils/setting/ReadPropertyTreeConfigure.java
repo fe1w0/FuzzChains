@@ -31,7 +31,7 @@ public class ReadPropertyTreeConfigure implements ReadConfiguration{
     }
 
     public static void main(String[] args) {
-        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
+        String configurationPath = "DataSet/tree.json";
 
         ReadConfiguration reader = new ReadPropertyTreeConfigure();
         PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());

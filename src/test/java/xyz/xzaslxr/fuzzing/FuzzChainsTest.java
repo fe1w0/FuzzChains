@@ -135,10 +135,7 @@ public class FuzzChainsTest {
      */
     @Fuzz
     public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws Exception {
-        String rootPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/";
-
-        // rootPath = "/home/fe1w0/SoftwareAnalysis/DynamicAnalysis/FuzzChains/DataSet/output/";
-
+        String rootPath = "DataSet/output/";
         String saveFilePath = rootPath + "poc.ser";
 
         ByteArrayOutputStream copyOutputStream = copyByteArrayInputStream(inputStream);

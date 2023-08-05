@@ -238,7 +238,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
 
 
     public static void main(String[] args) {
-        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
+        String configurationPath = "DataSet/tree.json";
 
         ReadConfiguration reader = new ReadPropertyTreeConfigure();
         PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());
@@ -267,7 +267,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
         System.setOut(new PrintStream(genOutputStreamCaptor));
 
         // 读取 PropertyTree 文件
-        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
+        String configurationPath = "DataSet/tree.json";
 
         ReadConfiguration reader = new ReadPropertyTreeConfigure();
         PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());

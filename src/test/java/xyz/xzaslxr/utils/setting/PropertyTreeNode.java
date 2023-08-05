@@ -125,16 +125,6 @@ public class PropertyTreeNode {
         }
     }
 
-    /**
-     * 将 PropertyTree 转为 List<PropertyTreeNode>，便于递归构造FuzzGenerator
-     * @return
-     */
-    public List<PropertyTreeNode> convertDeque() {
-
-
-        return null;
-    }
-
     public static void main(String[] args) throws JsonProcessingException {
 
         PropertyTreeNode sizeField = new PropertyTreeNode("PRIORITY", "java.lang.Integer", "size");
