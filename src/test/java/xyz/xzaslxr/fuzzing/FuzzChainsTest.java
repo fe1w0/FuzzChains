@@ -16,6 +16,7 @@ import xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator;
 
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
+import static xyz.xzaslxr.driver.FuzzChainsDriver.fuzzClassLoader;
 import static xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator.getFieldFromObject;
 
 
@@ -46,7 +47,17 @@ public class FuzzChainsTest {
     @Fuzz
     public void fuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws Exception {
         try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream){
+                @Override
+                public Class resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+                    try {
+                        return Class.forName(desc.getName(), true, fuzzClassLoader);
+                    } catch (Exception e) { }
+
+                    // Fall back (e.g. for primClasses)
+                    return super.resolveClass(desc);
+                }
+            };
             // 反序列化
             objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
@@ -143,7 +154,17 @@ public class FuzzChainsTest {
         ByteArrayInputStream saveStream = new ByteArrayInputStream(copyOutputStream.toByteArray());
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(copyOutputStream.toByteArray());
 
-        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream) {
+            @Override
+            public Class resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+                try {
+                    return Class.forName(desc.getName(), true, fuzzClassLoader);
+                } catch (Exception e) { }
+
+                // Fall back (e.g. for primClasses)
+                return super.resolveClass(desc);
+            }
+        };
 
         // 反序列化
         Object object = objectInputStream.readObject();

@@ -23,12 +23,5 @@
                 <include>**/*.class</include>
             </includes>
         </fileSet>
-        <fileSet>
-            <directory>DataSet/target</directory>
-            <outputDirectory>/</outputDirectory>
-            <includes>
-                <include>**/*.class</include>
-            </includes>
-        </fileSet>
     </fileSets>
 </assembly>

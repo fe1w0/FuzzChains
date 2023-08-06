@@ -8,9 +8,13 @@ import edu.berkeley.cs.jqf.instrument.tracing.events.TraceEvent;
 import java.io.InputStream;
 import java.util.function.Consumer;
 
+
+/**
+ *  This class learn from the <a href="https://github.com/rohanpadhye/JQF/wiki/The-Guidance-interface">jqf-wiki: The Guidance interface</a>
+ * @author fe1w0
+ */
 public class DirectedGuidance implements Guidance {
 
-    // 再每次迭代时，都会被调用
     @Override
     public InputStream getInput() throws IllegalStateException, GuidanceException {
         return null;

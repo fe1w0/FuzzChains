@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static xyz.xzaslxr.driver.FuzzChainsDriver.fuzzClassLoader;
+
 
 public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStream> {
 
@@ -42,7 +44,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
     public static <className> Object objectInstance(String className){
         className instantiatedObject = (className) new Object();
         try {
-            Class<?> targetClass = Class.forName(className);
+            Class<?> targetClass = Class.forName(className, true, fuzzClassLoader);
 
             Field f = Unsafe.class.getDeclaredField("theUnsafe");
             f.setAccessible(true);
@@ -70,7 +72,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
      */
     public static <className> Object setFieldTree(String className, Object rootObject, String fieldName, Object leafObject) {
         try {
-            Class<className> rootClass = (Class<className>) Class.forName(className);
+            Class<className> rootClass = (Class<className>) Class.forName(className, true, fuzzClassLoader);
 
             Field rootField = rootClass.getDeclaredField(fieldName);
 
@@ -118,7 +120,6 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
             return byteArrayInputStream;
         } catch (Exception e) {
             e.printStackTrace();
-
         }
         return null;
     }

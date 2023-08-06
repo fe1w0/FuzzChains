@@ -54,25 +54,14 @@
         </dependency>
 
         <dependency>
-            <groupId>example</groupId>
-            <artifactId>xyz-xzaslxr</artifactId>
-            <version>1.0</version>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>4.7.4</version>
         </dependency>
     </dependencies>
 
 
     <repositories>
-        <repository>
-            <id>local-maven-repository</id>
-            <url>file://${basedir}/otherLib/</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
 
     <build>
@@ -101,6 +90,11 @@
                     <descriptors>
                         <descriptor>src/main/assembly/assembly.xml</descriptor>
                     </descriptors>
+                    <archive>
+                        <manifest>
+                            <mainClass>xyz.xzaslxr.driver.FuzzChainsDriver</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
                 <executions>
                     <execution>
