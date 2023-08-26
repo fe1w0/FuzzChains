@@ -11,12 +11,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import xyz.xzaslxr.driver.FuzzChainsDriver;
 import xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator;
 
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static xyz.xzaslxr.driver.FuzzChainsDriver.fuzzClassLoader;
+import static xyz.xzaslxr.driver.FuzzChainsDriver.setUpClassLoader;
 import static xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator.getFieldFromObject;
 
 
@@ -31,6 +35,18 @@ public class FuzzChainsTest {
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
 
     private final String magicWords = "FuzzChains@fe1w0";
+
+
+    /**
+     * 检验 FuzzChainsDriver 中的 ClassLoader
+     */
+    @BeforeClass
+    public static void setClassLoader() throws IOException {
+        if (fuzzClassLoader == null) {
+           String fuzzTargetDirectory = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/targets/xyz-xzaslxr-1.0.jar";
+           setUpClassLoader(fuzzTargetDirectory);
+        }
+    }
 
     @Before
     public void setUp() {

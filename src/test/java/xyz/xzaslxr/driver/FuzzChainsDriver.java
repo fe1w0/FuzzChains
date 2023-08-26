@@ -2,21 +2,21 @@ package xyz.xzaslxr.driver;
 
 
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
+import edu.berkeley.cs.jqf.fuzz.guidance.Guidance;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
 import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import org.junit.runner.Result;
 import picocli.CommandLine;
 import xyz.xzaslxr.fuzzing.FuzzChainsTest;
+import xyz.xzaslxr.guidance.ReproGuidance;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader.stringsToUrls;
 
@@ -65,10 +65,12 @@ public class FuzzChainsDriver {
         String fuzzTime = "10s";
         String isSkipException = "false";
         String fuzzGuidance = "ZEST";
-        String fuzzMode = "fuzz";
+        String fuzzMode = "report";
         String outputDirectoryName = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/";
         String testClassName = FuzzChainsTest.class.getName();
         String testMethodName = null;
+
+        String inputFilePath = null;
 
         Long trials = 10L;
 
@@ -81,6 +83,9 @@ public class FuzzChainsDriver {
             testMethodName = "fuzz";
         } else if (fuzzMode.equals("report")) {
             testMethodName = "reportFuzz";
+            inputFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/failures/id_000000";
+
+            System.setProperty("jqf.repro.logUniqueBranches", "true");
         }
 
         // 设置 isSkipException
@@ -89,6 +94,12 @@ public class FuzzChainsDriver {
         } else {
             System.setProperty("jqf.failOnDeclaredExceptions", "false");
         }
+
+        System.setProperty("jqf.logCoverage", "true");
+
+        String logCoverage = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/coverage.out";
+        System.setProperty("logCoverageOutput", logCoverage);
+
 
         // 设置 ClassLoader
         setUpClassLoader(fuzzTargetDirectory);
@@ -106,15 +117,39 @@ public class FuzzChainsDriver {
 
             Duration fuzzDuration = Duration.parse("PT" + fuzzTime);
 
-            ZestGuidance guidance = new ZestGuidance(title, fuzzDuration, trials, outputDirectory, seedDirectories, random);
+            Guidance guidance = null;
+
+            if (fuzzMode.equals("fuzz") ) {
+                guidance = new ZestGuidance(title, fuzzDuration, trials, outputDirectory, seedDirectories, random);
+            } else if (fuzzMode.equals("report")) {
+                File inputFile = new File(inputFilePath);
+                guidance = new ReproGuidance(inputFile, null);
+            }
+
 
             // Run the Junit test
             Result res = GuidedFuzzing.run(testClassName, testMethodName, fuzzClassLoader, guidance, System.out);
 
-            if (Boolean.getBoolean("jqf.logCoverage")) {
-                System.out.println(String.format("Covered %d edges.",
-                        guidance.getTotalCoverage().getNonZeroCount()));
+            if (guidance instanceof ZestGuidance) {
+                if (Boolean.getBoolean("jqf.logCoverage")) {
+                    System.out.println(String.format("Covered %d edges.",
+                            ((ZestGuidance) guidance).getTotalCoverage().getNonZeroCount()));
+                }
+            } else if (guidance instanceof ReproGuidance) {
+                if (logCoverage != null) {
+                    Set<String> coverageSet = ((ReproGuidance)guidance).getBranchesCovered();
+                    assert (coverageSet != null); // Should not happen if we set the system property above
+                    SortedSet<String> sortedCoverage = new TreeSet<>(coverageSet);
+                    try (PrintWriter covOut = new PrintWriter(new File(logCoverage))) {
+                        for (String b : sortedCoverage) {
+                            covOut.println(b);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
+
             if (Boolean.getBoolean("jqf.ei.EXIT_ON_CRASH") && !res.wasSuccessful()) {
                 System.exit(3);
             }
