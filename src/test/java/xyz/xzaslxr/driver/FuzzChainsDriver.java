@@ -126,7 +126,6 @@ public class FuzzChainsDriver {
                 guidance = new ReproGuidance(inputFile, null);
             }
 
-
             // Run the Junit test
             Result res = GuidedFuzzing.run(testClassName, testMethodName, fuzzClassLoader, guidance, System.out);
 
