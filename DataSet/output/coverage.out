@@ -1,13 +1,7 @@
-(-1124061180) sources/serialize/UnsafeSerialize#readObject():39 --> sources/demo/Safe#safe(Lsources/demo/SafeClass;Lsources/demo/SafeClass;)V
-(-1124061181) sources/serialize/UnsafeSerialize#readObject():38 --> sources/demo/Safe#<init>()V
-(000000000) #<unknown>():0 --> sources/serialize/UnsafeSerialize#writeObject(Ljava/io/ObjectOutputStream;)V
-(1065361410) sources/demo/ExpOne#check():16 [0]
-(1065361412) sources/demo/ExpOne#check():19 --> sources/demo/ExpTwo#test(Ljava/lang/String;)V
-(1333792770) sources/demo/Safe#<init>():12 --> sources/demo/SafeClass#<init>()V
-(1333792771) sources/demo/Safe#<init>():13 --> sources/demo/SafeClass#<init>()V
-(1333805057) sources/demo/Safe#safe():34 --> sources/demo/ExpOne#check(Lsources/demo/SafeClass;)V
-(494936065) sources/dynamic/Reflect#handleMethod():10 --> sources/dynamic/Reflect#exec(Ljava/lang/String;)V
-(494940161) sources/dynamic/Reflect#exec():14 --> sources/demo/EvilObject#<init>()V
-(494940162) sources/dynamic/Reflect#exec():15 --> sources/demo/EvilObject#evil(Ljava/lang/String;)V
-(956309508) sources/demo/ExpTwo#test():21 --> sources/dynamic/Reflect#<init>()V
-(956309509) sources/demo/ExpTwo#test():22 --> sources/dynamic/Reflect#handleMethod(Ljava/lang/String;)V
+BranchEvent: (1065361410) sources/demo/ExpOne#check():16 [1]
+CallEvent: (-1124061180) sources/serialize/UnsafeSerialize#readObject():39 --> sources/demo/Safe#safe(Lsources/demo/SafeClass;Lsources/demo/SafeClass;)V
+CallEvent: (-1124061181) sources/serialize/UnsafeSerialize#readObject():38 --> sources/demo/Safe#<init>()V
+CallEvent: (000000000) #<unknown>():0 --> sources/serialize/UnsafeSerialize#writeObject(Ljava/io/ObjectOutputStream;)V
+CallEvent: (1333792770) sources/demo/Safe#<init>():12 --> sources/demo/SafeClass#<init>()V
+CallEvent: (1333792771) sources/demo/Safe#<init>():13 --> sources/demo/SafeClass#<init>()V
+CallEvent: (1333805057) sources/demo/Safe#safe():34 --> sources/demo/ExpOne#check(Lsources/demo/SafeClass;)V

@@ -83,7 +83,7 @@ public class FuzzChainsDriver {
             testMethodName = "fuzz";
         } else if (fuzzMode.equals("report")) {
             testMethodName = "reportFuzz";
-            inputFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/failures/id_000000";
+            inputFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/corpus/id_000000";
 
             System.setProperty("jqf.repro.logUniqueBranches", "true");
         }

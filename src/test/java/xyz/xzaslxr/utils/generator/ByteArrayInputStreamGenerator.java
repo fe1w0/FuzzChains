@@ -180,7 +180,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
                     break;
 
                 case "java.lang.Double":
-                    iProduct.fieldObject = random.nextDouble();
+                    iProduct.fieldObject = random.nextDouble(0.0, (double)maxNumber);
                     break;
 
                 case "java.lang.Float":
