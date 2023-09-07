@@ -1,0 +1,6 @@
+<sources.serialize.UnsafeSerialize: void readObject(java.io.ObjectInputStream)>
+<sources.demo.ExpOne: void check(sources.demo.SafeClass)>
+<sources.demo.ExpTwo: void test(java.lang.String)>
+<sources.dynamic.Reflect: void handleMethod(java.lang.String)>
+<sources.dynamic.Reflect: void exec(java.lang.String)>
+<sources.demo.EvilObject: void <init>()>
