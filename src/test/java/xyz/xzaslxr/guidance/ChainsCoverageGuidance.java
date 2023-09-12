@@ -3,12 +3,20 @@ package xyz.xzaslxr.guidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.Guidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.guidance.Result;
-import edu.berkeley.cs.jqf.fuzz.util.Coverage;
+import edu.berkeley.cs.jqf.fuzz.guidance.TimeoutException;
 import edu.berkeley.cs.jqf.fuzz.util.ICoverage;
+import edu.berkeley.cs.jqf.fuzz.util.IOUtils;
 import edu.berkeley.cs.jqf.instrument.tracing.events.TraceEvent;
+import org.eclipse.collections.api.iterator.IntIterator;
+import org.eclipse.collections.api.list.primitive.IntList;
+import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import xyz.xzaslxr.utils.coverage.ChainsCoverage;
+import xyz.xzaslxr.utils.setting.ChainPaths;
+import xyz.xzaslxr.utils.setting.ReadChainPathsConfigure;
 
 import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
 import java.util.function.Consumer;
@@ -41,7 +49,7 @@ public class ChainsCoverageGuidance implements Guidance {
 
     // ---------- Algorithm Parameters ----------
 
-    /** The max amount of time to run for, in milli-seconds
+    /** The max amount of time to run for, in milliseconds
      * <p>允许允许的最多时间，单位为秒</p>
      */
     protected long maxDurationMillis;
@@ -50,6 +58,8 @@ public class ChainsCoverageGuidance implements Guidance {
      * 当前有多少尝试完成
      * */
     protected long numTrials = 0;
+
+    protected long numValid = 0;
 
     /** The max number of trials to run
      * 设置的最多尝试次数
@@ -80,19 +90,35 @@ public class ChainsCoverageGuidance implements Guidance {
 
     // ---------- Fuzzing Input and Coverage ----------
 
+
+    protected String chainsConfigPath;
+
+    protected List<String> chainPaths;
+
+    /** validityFuzzing -- if true then save valid inputs that increase valid
+     * coverage
+     */
+    protected boolean validityFuzzing;
+
+    /**
+     * Number of saved inputs.
+     *
+     * This is usually the same as savedInputs.size(),
+     * but we do not really save inputs in TOTALLY_RANDOM mode.
+     */
+    protected int numSavedInputs = 0;
+
     /** Coverage statistics for a single run. */
     protected ICoverage runCoverage = new ChainsCoverage();
 
     protected ICoverage totalCoverage = new ChainsCoverage();
 
+    protected ICoverage validCoverage = new ChainsCoverage();
+
     protected ICoverage chainsCoverage = new ChainsCoverage();
 
     protected int maxCoverage = 0;
 
-
-    /**
-     *
-     */
     protected int maxChainsCoverage = 0;
 
     protected Map<Object, Input> responsibleInputs = new HashMap<>(totalCoverage.size());
@@ -140,6 +166,23 @@ public class ChainsCoverageGuidance implements Guidance {
 
     /** Whether to print log statements to stderr (debug option; manually edit). */
     protected final boolean verbose = true;
+
+
+    /** The directory where fuzzing results are produced. */
+    protected final File outputDirectory;
+
+    /** The directory where interesting inputs are saved. */
+    protected File savedCorpusDirectory;
+
+    /** The directory where saved inputs are saved. */
+    protected File savedFailuresDirectory;
+
+    /**
+     * The directory where all generated inputs are logged in sub-directories (if
+     * enabled).
+     */
+    protected File allInputsDirectory;
+
 
     // ---------- Thread Handling ----------
 
@@ -204,26 +247,88 @@ public class ChainsCoverageGuidance implements Guidance {
 
 
 
-    // ---------- Other Parameters ----------
+    // ------------- TIMEOUT HANDLING ------------
 
-    private long singleRunTimeoutTrial;
+    private long singleRunTimeoutMillis;
 
     private Date runStart;
 
-    private Coverage coverage = new Coverage();
-
-    private Set<String> branchesCoveredInCurrentRun;
-
-    private Set<String> allBranchesCovered;
-
-
     // -------- Initialization --------
-    public ChainsCoverageGuidance(String testName, Duration duration, Long trials, File outputDirectory, File[] seedInputFiles, Random sourceOfRandomness){
+    public ChainsCoverageGuidance(String testName, Duration duration, Long trials, File outputDirectory, File seedInputDir, Random sourceOfRandomness, String chainsConfigPath) throws IOException{
+        this(testName, duration, trials, outputDirectory,  IOUtils.resolveInputFileOrDirectory(seedInputDir), sourceOfRandomness, chainsConfigPath);
+    }
+
+    public ChainsCoverageGuidance(String testName, Duration duration, Long trials, File outputDirectory, File[] seedInputFiles, Random sourceOfRandomness, String chainsConfigPath) throws IOException {
+        this(testName, duration, trials, outputDirectory, sourceOfRandomness, chainsConfigPath);
+        if (seedInputFiles != null) {
+            for (File seedInputFile : seedInputFiles) {
+                seedInputs.add(new SeedInput(seedInputFile));
+            }
+        }
+    }
+
+    public ChainsCoverageGuidance(String testName, Duration duration, Long trials, File outputDirectory, Random sourceOfRandomness, String chainsConfigPath) throws IOException {
+        this.random = sourceOfRandomness;
+        this.testName = testName;
+        this.maxDurationMillis = duration != null ? duration.toMillis() : Long.MAX_VALUE;
+        this.maxTrials = trials != null ? trials : Long.MAX_VALUE;
+        this.outputDirectory = outputDirectory;
+        this.validityFuzzing = !Boolean.getBoolean("jqf.ei.DISABLE_VALIDITY_FUZZING");
+        this.chainsConfigPath = chainsConfigPath;
+
+        ReadChainPathsConfigure reader = new ReadChainPathsConfigure();
+        ChainPaths tmpChainPaths = reader.readConfiguration(chainsConfigPath, new ChainPaths());
+
+        this.chainPaths = tmpChainPaths.getPaths();
+
+        prepareOutputDirectory();
+
+        String timeout = System.getProperty("jqf.ei.TIMEOUT");
+        if (timeout != null && !timeout.isEmpty()) {
+            try {
+                // Interpret the timeout as milliseconds (just like `afl-fuzz -t`)
+                this.singleRunTimeoutMillis = Long.parseLong(timeout);
+            } catch (NumberFormatException e1) {
+                throw new IllegalArgumentException("Invalid timeout duration: " + timeout);
+            }
+        }
+        
+    }
+
+
+    /**
+     * Todo: 需要自定义修改
+     * @throws IOException
+     */
+    private void prepareOutputDirectory() throws IOException {
+        // Create the output directory if it does not exist
+        IOUtils.createDirectory(outputDirectory);
+
+        // Name files and directories after AFL
+        this.savedCorpusDirectory = IOUtils.createDirectory(outputDirectory, "corpus");
+        this.savedFailuresDirectory = IOUtils.createDirectory(outputDirectory, "failures");
+
+        this.logFile = new File(outputDirectory, "fuzz.log");
+
+        // Delete everything that we may have created in a previous run.
+        // Trying to stay away from recursive delete of parent output directory in case there was a
+        // typo and that was not a directory we wanted to nuke.
+        // We also do not check if the deletes are actually successful.
+        logFile.delete();
+        for (File file : savedCorpusDirectory.listFiles()) {
+            file.delete();
+        }
+        for (File file : savedFailuresDirectory.listFiles()) {
+            file.delete();
+        }
 
     }
 
+
+    // -------- Basic Method --------
+
     /**
-     * 检查是否有新的输入
+     * 检查是否有新的输入：
      * <p>参考:
      * edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance#hasInput()
      * </p>
@@ -246,14 +351,15 @@ public class ChainsCoverageGuidance implements Guidance {
         }
     }
 
+
+    // --------- JQF Basic Frame ---------
+
     /**
      * 得到新的程序输入
      * <p>参考:
      * edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance#getInput()
      * </p>
      * @return java.io.InputStream
-     * @throws IllegalStateException
-     * @throws GuidanceException
      */
     @Override
     public InputStream getInput() throws IllegalStateException, GuidanceException {
@@ -269,11 +375,8 @@ public class ChainsCoverageGuidance implements Guidance {
                 // 优先使用 seedInputs 前面的流量
                 // removeFirst 会
                 currentInput = seedInputs.removeFirst();
-
-                // Hopefully, the seeds will lead to new coverage and be added to saved inputs
-
-                // savedInputs 为空，表示的是当前trial的队列为空
             } else if (savedInputs.isEmpty()) {
+                // savedInputs 为空，表示的是当前trial的队列为空
                 // If no seeds given try to start with something random
                 if (numTrials > 100_000) {
                     throw new GuidanceException("Too many trials; " +
@@ -325,27 +428,216 @@ public class ChainsCoverageGuidance implements Guidance {
     }
 
     /**
-     *
-     * <p>⚠️ 需要注意: generateCallBack 在 JQF中的 执行顺序上优于 handleResult，处于在 run 过程中。</p>
+     * 注册处理Event的函数
+     * <p>⚠️ 需要注意: generateCallBack 在 JQF中的 执行顺序上优于 handleResult</p>
      * @param thread  the thread whose events to handle
      * @return Consumer<TraceEvent>
      */
     @Override
     public Consumer<TraceEvent> generateCallBack(Thread thread) {
-        return null;
+        if (firstThread == null) {
+            firstThread = thread;
+        } else if (firstThread != thread) {
+            multiThreaded = true;
+        }
+        return this::handleEvent;
     }
-
 
     /**
      *
      * @param result   the result of the fuzzing trial
      * @param error    the error thrown during the trial, or <code>null</code>
-     * @throws GuidanceException
      */
     @Override
     public void handleResult(Result result, Throwable error) throws GuidanceException {
+        conditionallySynchronize(multiThreaded, () -> {
+            // Stop timeout handling
+            this.runStart = null;
 
+            // Increment run count
+            this.numTrials++;
+
+            boolean valid = result == Result.SUCCESS;
+
+
+            if (valid) {
+                this.numValid++;
+            }
+
+            // 当前trial为成功，或者该trial中忽视
+            if (result == Result.SUCCESS || (result == Result.INVALID && !SAVE_ONLY_VALID)) {
+
+
+                IntHashSet responsibilities = computeResponsibilities(valid);
+
+                List<String> savingCriteriaSatisfied = checkSavingCriteriaSatisfied(result);
+                boolean toSave = !savingCriteriaSatisfied.isEmpty();
+
+                if (toSave) {
+                    String why = String.join(" ", savingCriteriaSatisfied);
+
+                    // Todo: 理解 gc 的作用
+                    currentInput.gc();
+
+                    // Save input to queue and to disk
+                    final String reason = why;
+
+                    GuidanceException.wrap(() -> saveCurrentInput(responsibilities, reason));
+
+                    // Update coverage information
+                    // updateCoverageFile();
+                } else if (result == Result.FAILURE || result == Result.TIMEOUT) {
+                    // 需要注意的是:
+                    // 区别 FuzzException 和 其他 Exception 的区别
+
+                    String msg = error.getMessage();
+
+                    // Get the root cause of the failure
+                    Throwable rootCause = error;
+                    while (rootCause.getCause() != null) {
+                        rootCause = rootCause.getCause();
+                    }
+
+                    // Attempt to add this to the set of unique failures
+                    if (uniqueFailures.add(failureDigest(rootCause.getStackTrace()))) {
+                        // Trim input (remove unused keys)
+                        currentInput.gc();
+
+                        // Save crash to disk
+                        int crashIdx = uniqueFailures.size() - 1;
+                        String saveFileName = String.format("id_%06d", crashIdx);
+                        File saveFile = new File(savedFailuresDirectory, saveFileName);
+                        GuidanceException.wrap(() -> writeCurrentInputToFile(saveFile));
+                        infoLog("%s", "Found crash: " + error.getClass() + " - " + (msg != null ? msg : ""));
+                        String how = currentInput.desc;
+                        String why = result == Result.FAILURE ? "+crash" : "+hang";
+                        infoLog("Saved - %s %s %s", saveFile.getPath(), how, why);
+
+                        // if (EXACT_CRASH_PATH != null && !EXACT_CRASH_PATH.equals("")) {
+                        //     File exactCrashFile = new File(EXACT_CRASH_PATH);
+                        //     GuidanceException.wrap(() -> writeCurrentInputToFile(exactCrashFile));
+                        // }
+                    }
+
+                    // Save input unconditionally if such a setting is enabled
+                    // 暂时保存所有信息
+                    if ((SAVE_ONLY_VALID ? valid : true)) {
+                        File logDirectory = new File(allInputsDirectory, result.toString().toLowerCase());
+                        String saveFileName = String.format("id_%09d", numTrials);
+                        File saveFile = new File(logDirectory, saveFileName);
+                        GuidanceException.wrap(() -> writeCurrentInputToFile(saveFile));
+                    }
+                }
+            }
+        });
     }
+
+    // ------- Handle Result -------
+
+    /**
+     * computeResponsibilities 的计算结果为，(runCoverage - totalCoverage) and (runCoverage - validCoverage) and (runCoverage - validCoverage)
+     *
+     * <p>
+     *     Todo: 可以优化
+     * </p>
+     *
+     * @param valid
+     * @return IntHashSet
+     */
+    protected IntHashSet computeResponsibilities(boolean valid) {
+        IntHashSet result = new IntHashSet();
+
+        // newValidCoverage 中保存着之前 totalCoverage中没有的新的edges信息
+        IntList newCoverage = runCoverage.computeNewCoverage(totalCoverage);
+        if (!newCoverage.isEmpty()) {
+            result.addAll(newCoverage);
+        }
+
+        // 如果当前result为有效的，则同样更新validCoverage
+        if (valid) {
+            IntList newValidCoverage = runCoverage.computeNewCoverage(validCoverage);
+            if (!newValidCoverage.isEmpty()) {
+                result.addAll(newValidCoverage);
+            }
+        }
+
+        // Todo: 测试可行性
+        IntList newChainsCoverage = runCoverage.computeNewCoverage(chainsCoverage);
+        if (!newChainsCoverage.isEmpty()) {
+            result.addAll(newChainsCoverage);
+        }
+
+        // Todo: 理解 STEAL_RESPONSIBILITY 的作用，暂时先删除
+        return result;
+    }
+
+    /**
+     * 返回reasonsToSave，返回更新的原因
+     * @param result
+     * @return
+     */
+    protected List<String> checkSavingCriteriaSatisfied(Result result) {
+        // Coverage Before
+
+        // 之前，TotalCoverage的Edges数量
+        int nonZeroBefore = totalCoverage.getNonZeroCount();
+        // 之前，ValidCoverage的Edges数量
+        int validNonZeroBefore = validCoverage.getNonZeroCount();
+        // 之前，ChainsCoverage的Edges数量
+        int chainsNoeZeroBefore = chainsCoverage.getNonZeroCount();
+
+        // Todo: 理解updateBits函数中的hob函数和原理，得看 Coverage中counter的计算方式了
+        boolean coverageBitsUpdated = totalCoverage.updateBits(runCoverage);
+
+        if (result == Result.SUCCESS) {
+            validCoverage.updateBits(runCoverage);
+        }
+
+        // Todo: 添加 chainsCoverage.updateBits
+        // 当发现新的且有效的chainCoverage时，刷新chainsCoverage？
+
+
+        // Coverage after
+        int nonZeroAfter = totalCoverage.getNonZeroCount();
+        if (nonZeroAfter > maxCoverage) {
+            maxCoverage = nonZeroAfter;
+        }
+        int validNonZeroAfter = validCoverage.getNonZeroCount();
+
+        // Possibly save input
+        List<String> reasonsToSave = new ArrayList<>();
+
+        if (!DISABLE_SAVE_NEW_COUNTS && coverageBitsUpdated) {
+            reasonsToSave.add("+count");
+        }
+
+        // Save if new total coverage found
+        if (nonZeroAfter > nonZeroBefore) {
+            reasonsToSave.add("+cov");
+        }
+
+        // Save if new valid coverage is found
+        if (this.validityFuzzing && validNonZeroAfter > validNonZeroBefore) {
+            reasonsToSave.add("+valid");
+        }
+
+        return reasonsToSave;
+    }
+
+
+    /** Updates the data in the coverage file */
+    // protected void updateCoverageFile() {
+    //     try {
+    //         PrintWriter pw = new PrintWriter(coverageFile);
+    //         pw.println(getTotalCoverage().toString());
+    //         pw.println("Hash code: " + getTotalCoverage().hashCode());
+    //         pw.close();
+    //     } catch (FileNotFoundException ignore) {
+    //         throw new GuidanceException(ignore);
+    //     }
+    // }
+
+    // -------- Stats --------
 
     /**
      * 展示Fuzzing的现状
@@ -355,9 +647,11 @@ public class ChainsCoverageGuidance implements Guidance {
 
     }
 
+    // -------- Generate Input Part -------
+
     /**
      * 生成用于 generators 的 InputStream
-     * @return
+     * @return InputStream
      */
     protected InputStream createParameterStream() {
         return new InputStream() {
@@ -377,11 +671,9 @@ public class ChainsCoverageGuidance implements Guidance {
         };
     }
 
-    // -------- Generate Input Part -------
-
     /**
      * 因为seedInput和savedInput都为空，需要产生一个全新的输入
-     * @return
+     * @return Input<?>
      */
     protected Input<?> createFreshInput() {
         return new LinearInput();
@@ -403,6 +695,85 @@ public class ChainsCoverageGuidance implements Guidance {
             target = target * NUM_CHILDREN_MULTIPLIER_FAVORED;
         }
         return target;
+    }
+
+    protected void saveCurrentInput(IntHashSet responsibilities, String why) throws IOException {
+
+        // First, save to disk (note: we issue IDs to everyone, but only write to disk
+        // if valid)
+        int newInputIdx = numSavedInputs++;
+        String saveFileName = String.format("id_%06d", newInputIdx);
+        String how = currentInput.desc;
+        File saveFile = new File(savedCorpusDirectory, saveFileName);
+        writeCurrentInputToFile(saveFile);
+        infoLog("Saved - %s %s %s", saveFile.getPath(), how, why);
+
+
+        // Second, save to queue
+        savedInputs.add(currentInput);
+
+        // Third, store basic book-keeping data
+        currentInput.id = newInputIdx;
+        currentInput.saveFile = saveFile;
+        currentInput.coverage = runCoverage.copy();
+        currentInput.nonZeroCoverage = runCoverage.getNonZeroCount();
+        currentInput.offspring = 0;
+        savedInputs.get(currentParentInputIdx).offspring += 1;
+
+        // Fourth, assume responsibility for branches
+        currentInput.responsibilities = responsibilities;
+        if (responsibilities.size() > 0) {
+            currentInput.setFavored();
+        }
+        IntIterator iter = responsibilities.intIterator();
+        while (iter.hasNext()) {
+            int b = iter.next();
+            // If there is an old input that is responsible,
+            // subsume it
+            Input oldResponsible = responsibleInputs.get(b);
+            if (oldResponsible != null) {
+                oldResponsible.responsibilities.remove(b);
+                // infoLog("-- Stealing responsibility for %s from input %d", b,
+                // oldResponsible.id);
+            } else {
+                // infoLog("-- Assuming new responsibility for %s", b);
+            }
+            // We are now responsible
+            responsibleInputs.put(b, currentInput);
+        }
+
+    }
+
+    protected void writeCurrentInputToFile(File saveFile) throws IOException {
+        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(saveFile))) {
+            for (Integer b : currentInput) {
+                assert (b >= 0 && b < 256);
+                out.write(b);
+            }
+        }
+
+    }
+
+
+    // --------- Handle Exception ------
+
+    private static MessageDigest sha1;
+
+    private static String failureDigest(StackTraceElement[] stackTrace) {
+        if (sha1 == null) {
+            try {
+                sha1 = MessageDigest.getInstance("SHA-1");
+            } catch (NoSuchAlgorithmException e) {
+                throw new GuidanceException(e);
+            }
+        }
+        byte[] bytes = sha1.digest(Arrays.deepToString(stackTrace).getBytes());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < bytes.length; i++) {
+            sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16)
+                    .substring(1));
+        }
+        return sb.toString();
     }
 
 
@@ -454,12 +825,38 @@ public class ChainsCoverageGuidance implements Guidance {
             if (multiThreaded) {
                 infoLog("Warning: other threads are adding coverage between test executions");
             } else {
-                throw new AssertionError("Responsibilty mismatch");
+                throw new AssertionError("Responsibility mismatch");
             }
         }
 
         // Break log after cycle
         infoLog("\n\n\n");
+    }
+
+    // -------- Handle Events --------
+
+    /**
+     * Handles a trace event generated during test execution.
+     * <p>handleEvent: 处理Event的过程中，会对 totalCoverage 等信息进行更新</p>
+     *
+     * Not used by FastNonCollidingCoverage, which does not allocate an
+     * instance of TraceEvent at each branch probe execution.
+     *
+     * @param e the trace event to be handled
+     */
+    protected void handleEvent(TraceEvent e) {
+        conditionallySynchronize(multiThreaded, () -> {
+            // Collect totalCoverage
+            ((ChainsCoverage) runCoverage).handleEvent(e);
+            // Check for possible timeouts every so often
+            if (this.singleRunTimeoutMillis > 0 &&
+                    this.runStart != null && (++this.branchCount) % 10_000 == 0) {
+                long elapsed = new Date().getTime() - runStart.getTime();
+                if (elapsed > this.singleRunTimeoutMillis) {
+                    throw new TimeoutException(elapsed, this.singleRunTimeoutMillis);
+                }
+            }
+        });
     }
 
     // -------- Debug and Log --------
@@ -485,5 +882,8 @@ public class ChainsCoverageGuidance implements Guidance {
         }
     }
 
-
+    // Output Information
+    public ICoverage getTotalCoverage() {
+        return totalCoverage;
+    }
 }

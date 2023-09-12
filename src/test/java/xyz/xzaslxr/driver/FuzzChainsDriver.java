@@ -8,6 +8,7 @@ import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import org.junit.runner.Result;
 import picocli.CommandLine;
 import xyz.xzaslxr.fuzzing.FuzzChainsTest;
+import xyz.xzaslxr.guidance.ChainsCoverageGuidance;
 import xyz.xzaslxr.guidance.ReproGuidance;
 
 import java.io.File;
@@ -65,10 +66,11 @@ public class FuzzChainsDriver {
         String fuzzTime = "10s";
         String isSkipException = "false";
         String fuzzGuidance = "ZEST";
-        String fuzzMode = "report";
+        String fuzzMode = "chains";
         String outputDirectoryName = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/";
         String testClassName = FuzzChainsTest.class.getName();
         String testMethodName = null;
+        String chainsConfigPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/paths.csv";
 
         String inputFilePath = null;
 
@@ -79,7 +81,7 @@ public class FuzzChainsDriver {
         // 设置 fuzz 模式:
         // 1. fuzz
         // 2. report
-        if (fuzzMode.equals("fuzz") ) {
+        if (fuzzMode.equals("fuzz") || fuzzMode.equals("chains") ) {
             testMethodName = "fuzz";
         } else if (fuzzMode.equals("report")) {
             testMethodName = "reportFuzz";
@@ -125,6 +127,8 @@ public class FuzzChainsDriver {
             } else if (fuzzMode.equals("report")) {
                 File inputFile = new File(inputFilePath);
                 guidance = new ReproGuidance(inputFile, null);
+            } else if (fuzzMode.equals("chains")) {
+                guidance = new ChainsCoverageGuidance(title, fuzzDuration, trials, outputDirectory, seedDirectories, random, chainsConfigPath);
             }
 
             // Run the Junit test
@@ -134,6 +138,11 @@ public class FuzzChainsDriver {
                 if (Boolean.getBoolean("jqf.logCoverage")) {
                     System.out.println(String.format("Covered %d edges.",
                             ((ZestGuidance) guidance).getTotalCoverage().getNonZeroCount()));
+                }
+            } else if (guidance instanceof ChainsCoverageGuidance) {
+                if (Boolean.getBoolean("jqf.logCoverage")) {
+                    System.out.println(String.format("Covered %d edges.",
+                            ((ChainsCoverageGuidance) guidance).getTotalCoverage().getNonZeroCount()));
                 }
             } else if (guidance instanceof ReproGuidance) {
                 if (logCoverage != null) {

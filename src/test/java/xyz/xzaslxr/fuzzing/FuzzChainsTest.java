@@ -61,7 +61,7 @@ public class FuzzChainsTest {
     }
 
     @Fuzz
-    public void fuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws Exception {
+    public void fuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream byteArrayInputStream) throws FuzzException {
         try {
             ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream){
                 @Override
@@ -86,7 +86,7 @@ public class FuzzChainsTest {
         if (isExploitable) {
             // 对于 Poc 生成来说，需要 assumeFalse(false); 引导 POC 的生成
             assumeFalse(false);
-            throw new Exception("This Object is Exploitable.");
+            throw new FuzzException("This Object is Exploitable.");
         }
     }
 
@@ -176,7 +176,6 @@ public class FuzzChainsTest {
                 try {
                     return Class.forName(desc.getName(), true, fuzzClassLoader);
                 } catch (Exception e) { }
-
                 // Fall back (e.g. for primClasses)
                 return super.resolveClass(desc);
             }
@@ -209,7 +208,7 @@ public class FuzzChainsTest {
             saveByteArrayInputStream(saveFilePath, saveStream);
             // 触发 assumeFalse(false);
             assumeFalse(false);
-            throw new Exception("This Object is Exploitable.");
+            throw new FuzzException("This Object is Exploitable.");
         } else {
             assumeFalse(true);
             saveFilePath = rootPath + "no-poc.ser";

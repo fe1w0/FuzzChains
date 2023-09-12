@@ -1,8 +1,9 @@
 package xyz.xzaslxr.utils.coverage;
 
 import edu.berkeley.cs.jqf.fuzz.util.Counter;
+import edu.berkeley.cs.jqf.fuzz.util.Coverage;
 import edu.berkeley.cs.jqf.fuzz.util.ICoverage;
-import edu.berkeley.cs.jqf.instrument.tracing.events.TraceEventVisitor;
+import edu.berkeley.cs.jqf.instrument.tracing.events.*;
 import org.eclipse.collections.api.list.primitive.IntList;
 
 /**
@@ -10,49 +11,18 @@ import org.eclipse.collections.api.list.primitive.IntList;
  * @date 2023/9/11 10:22
  * @Project FuzzChains
  */
-public class ChainsCoverage implements TraceEventVisitor, ICoverage<Counter> {
-    @Override
-    public int size() {
-        return 0;
-    }
+public class ChainsCoverage extends Coverage implements TraceEventVisitor, ICoverage<Counter> {
 
-    @Override
-    public int getNonZeroCount() {
-        return 0;
-    }
-
-    @Override
-    public IntList getCovered() {
-        return null;
-    }
-
-    @Override
-    public IntList computeNewCoverage(ICoverage baseline) {
-        return null;
-    }
-
-    @Override
-    public void clear() {
-
-    }
-
-    @Override
-    public boolean updateBits(ICoverage that) {
-        return false;
-    }
-
-    @Override
-    public int nonZeroHashCode() {
-        return 0;
-    }
-
-    @Override
-    public Counter getCounter() {
-        return null;
-    }
-
-    @Override
-    public ICoverage<Counter> copy() {
-        return null;
+    /**
+     * Todo:
+     * 完善handleEvent机制。
+     * <p>
+     *     handleEvent会执行applyVisitor，applyVisitor将会调用TraceEventVisitor中各类visitor函数，
+     *     如对于CallEvent，会调用visitCallEvent。
+     * </p>
+     * @param e
+     */
+    public void handleEvent(TraceEvent e) {
+        e.applyVisitor(this);
     }
 }
