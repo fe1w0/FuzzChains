@@ -58,7 +58,7 @@ public class FuzzChainsDriver {
     public static void main(String[] args) throws IOException {
         // 设置启动参数
 
-        String fuzzTime = "3000s";
+        String fuzzTime = "30s";
         String isSkipException = "false";
         String fuzzGuidance = "ZEST";
         // String fuzzMode = "chains";
@@ -70,7 +70,7 @@ public class FuzzChainsDriver {
 
         String inputFilePath = null;
 
-        Long trials = 10000L;
+        Long trials = 100L;
 
         String fuzzTargetDirectory = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/targets/xyz-xzaslxr-1.0.jar";
 
