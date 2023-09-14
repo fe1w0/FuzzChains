@@ -20,7 +20,14 @@
       "label": "ORDINARY",
       "className": "sources.demo.ExpTwo",
       "fieldName": "chainTwo",
-      "fields": []
+      "fields": [
+        {
+          "label": "PRIORITY",
+            "className": "java.lang.Integer",
+          "fieldName": "size",
+          "fields": []
+        }
+      ]
     }
   ]
 }

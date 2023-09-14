@@ -19,6 +19,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -93,7 +94,7 @@ public class ChainsCoverageGuidance implements Guidance {
 
     protected String chainsConfigPath;
 
-    protected List<String> chainPaths;
+    protected Map<Integer, String> chainPaths = new ConcurrentHashMap<>();
 
     /** validityFuzzing -- if true then save valid inputs that increase valid
      * coverage
@@ -279,7 +280,10 @@ public class ChainsCoverageGuidance implements Guidance {
         ReadChainPathsConfigure reader = new ReadChainPathsConfigure();
         ChainPaths tmpChainPaths = reader.readConfiguration(chainsConfigPath, new ChainPaths());
 
-        this.chainPaths = tmpChainPaths.getPaths();
+        // prepare chainsPaths
+        for (String path: tmpChainPaths.getPaths()) {
+            this.chainPaths.put(path.hashCode(), path);
+        }
 
         prepareOutputDirectory();
 
@@ -369,32 +373,37 @@ public class ChainsCoverageGuidance implements Guidance {
             runCoverage.clear();
 
             // Choose an input to execute based on state of queues
-            // seedInputs 非空状态，表示保存有效的种子
             if (!seedInputs.isEmpty()) {
+                // 当 seedInputs 非空时，表示保存有效的种子
                 // First, if we have some specific seeds, use those
                 // 优先使用 seedInputs 前面的流量
-                // removeFirst 会
+                // seedInputs 只会在此处进行消耗
                 currentInput = seedInputs.removeFirst();
             } else if (savedInputs.isEmpty()) {
-                // savedInputs 为空，表示的是当前trial的队列为空
+                //当 savedInputs 和 seedInput 都为空时
                 // If no seeds given try to start with something random
                 if (numTrials > 100_000) {
                     throw new GuidanceException("Too many trials; " +
                             "likely all assumption violations");
                 }
-
                 // Make fresh input using either list or maps
-                // infoLog("Spawning new input from thin air");
+                infoLog("Spawning new input from thin air");
                 // 创建一个全新的inputs队列
                 currentInput = createFreshInput();
             } else {
+                // 当 seedInputs 为空，savedInputs 为非空
+
                 // The number of children to produce is determined by how much of the coverage
                 // pool this parent input hits
                 // 当前的新input内容受到之前父input的覆盖率所决定
 
                 Input currentParentInput = savedInputs.get(currentParentInputIdx);
+
                 int targetNumChildren = getTargetChildrenForParent(currentParentInput);
+
+                // 超出当前的基线，需要刷新 numChildrenGeneratedForCurrentParentInput
                 if (numChildrenGeneratedForCurrentParentInput >= targetNumChildren) {
+
                     // Select the next saved input to fuzz
                     currentParentInputIdx = (currentParentInputIdx + 1) % savedInputs.size();
 
@@ -402,14 +411,17 @@ public class ChainsCoverageGuidance implements Guidance {
                     if (currentParentInputIdx == 0) {
                         completeCycle();
                     }
-
                     numChildrenGeneratedForCurrentParentInput = 0;
                 }
                 Input parent = savedInputs.get(currentParentInputIdx);
 
                 // Fuzz it to get a new input
-                // infoLog("Mutating input: %s", parent.desc);
+                // Mutate Input, 对象是 parent
                 currentInput = parent.fuzz(random);
+
+                infoLog("Mutating input: %s", parent.desc + "\tnewInput: " + currentInput.desc);
+
+                // numChildrenGeneratedForCurrentParentInput 自增
                 numChildrenGeneratedForCurrentParentInput++;
 
                 // Write it to disk for debugging
@@ -419,7 +431,13 @@ public class ChainsCoverageGuidance implements Guidance {
                 // }
 
                 // Start time-counting for timeout handling
+
+                // 细节：
+                // 第一次执行时，原 Zest 算法不会产生新的runStart
+                //
                 this.runStart = new Date();
+
+                // handleEvent时，会 ++this.branchCount
                 this.branchCount = 0;
             }
         });
@@ -466,8 +484,6 @@ public class ChainsCoverageGuidance implements Guidance {
 
             // 当前trial为成功，或者该trial中忽视
             if (result == Result.SUCCESS || (result == Result.INVALID && !SAVE_ONLY_VALID)) {
-
-
                 IntHashSet responsibilities = computeResponsibilities(valid);
 
                 List<String> savingCriteriaSatisfied = checkSavingCriteriaSatisfied(result);
@@ -486,47 +502,47 @@ public class ChainsCoverageGuidance implements Guidance {
 
                     // Update coverage information
                     // updateCoverageFile();
-                } else if (result == Result.FAILURE || result == Result.TIMEOUT) {
-                    // 需要注意的是:
-                    // 区别 FuzzException 和 其他 Exception 的区别
-
-                    String msg = error.getMessage();
-
-                    // Get the root cause of the failure
-                    Throwable rootCause = error;
-                    while (rootCause.getCause() != null) {
-                        rootCause = rootCause.getCause();
                     }
+            } else if (result == Result.FAILURE || result == Result.TIMEOUT) {
+                // 需要注意的是:
+                // 区别 FuzzException 和 其他 Exception 的区别
 
-                    // Attempt to add this to the set of unique failures
-                    if (uniqueFailures.add(failureDigest(rootCause.getStackTrace()))) {
-                        // Trim input (remove unused keys)
-                        currentInput.gc();
+                String msg = error.getMessage();
 
-                        // Save crash to disk
-                        int crashIdx = uniqueFailures.size() - 1;
-                        String saveFileName = String.format("id_%06d", crashIdx);
-                        File saveFile = new File(savedFailuresDirectory, saveFileName);
-                        GuidanceException.wrap(() -> writeCurrentInputToFile(saveFile));
-                        infoLog("%s", "Found crash: " + error.getClass() + " - " + (msg != null ? msg : ""));
-                        String how = currentInput.desc;
-                        String why = result == Result.FAILURE ? "+crash" : "+hang";
-                        infoLog("Saved - %s %s %s", saveFile.getPath(), how, why);
+                // Get the root cause of the failure
+                Throwable rootCause = error;
+                while (rootCause.getCause() != null) {
+                    rootCause = rootCause.getCause();
+                }
 
-                        // if (EXACT_CRASH_PATH != null && !EXACT_CRASH_PATH.equals("")) {
-                        //     File exactCrashFile = new File(EXACT_CRASH_PATH);
-                        //     GuidanceException.wrap(() -> writeCurrentInputToFile(exactCrashFile));
-                        // }
-                    }
+                // Attempt to add this to the set of unique failures
+                if (uniqueFailures.add(failureDigest(rootCause.getStackTrace()))) {
+                    // Trim input (remove unused keys)
+                    currentInput.gc();
 
-                    // Save input unconditionally if such a setting is enabled
-                    // 暂时保存所有信息
-                    if ((SAVE_ONLY_VALID ? valid : true)) {
-                        File logDirectory = new File(allInputsDirectory, result.toString().toLowerCase());
-                        String saveFileName = String.format("id_%09d", numTrials);
-                        File saveFile = new File(logDirectory, saveFileName);
-                        GuidanceException.wrap(() -> writeCurrentInputToFile(saveFile));
-                    }
+                    // Save crash to disk
+                    int crashIdx = uniqueFailures.size() - 1;
+                    String saveFileName = String.format("id_%06d", crashIdx);
+                    File saveFile = new File(savedFailuresDirectory, saveFileName);
+                    GuidanceException.wrap(() -> writeCurrentInputToFile(saveFile));
+                    infoLog("%s", "Found crash: " + error.getClass() + " - " + (msg != null ? msg : ""));
+                    String how = currentInput.desc;
+                    String why = result == Result.FAILURE ? "+crash" : "+hang";
+                    infoLog("Saved - %s %s %s", saveFile.getPath(), how, why);
+
+                    // if (EXACT_CRASH_PATH != null && !EXACT_CRASH_PATH.equals("")) {
+                    //     File exactCrashFile = new File(EXACT_CRASH_PATH);
+                    //     GuidanceException.wrap(() -> writeCurrentInputToFile(exactCrashFile));
+                    // }
+                }
+
+                // Save input unconditionally if such a setting is enabled
+                // 暂时保存所有信息
+                if ((!SAVE_ONLY_VALID || valid)) {
+                    File logDirectory = new File(allInputsDirectory, result.toString().toLowerCase());
+                    String saveFileName = String.format("id_%09d", numTrials);
+                    File saveFile = new File(logDirectory, saveFileName);
+                    GuidanceException.wrap(() -> writeCurrentInputToFile(saveFile));
                 }
             }
         });
@@ -572,7 +588,7 @@ public class ChainsCoverageGuidance implements Guidance {
     }
 
     /**
-     * 返回reasonsToSave，返回更新的原因
+     * 返回 reasonsToSave，返回更新的原因
      * @param result
      * @return
      */
@@ -586,7 +602,7 @@ public class ChainsCoverageGuidance implements Guidance {
         // 之前，ChainsCoverage的Edges数量
         int chainsNoeZeroBefore = chainsCoverage.getNonZeroCount();
 
-        // Todo: 理解updateBits函数中的hob函数和原理，得看 Coverage中counter的计算方式了
+        // Todo:
         boolean coverageBitsUpdated = totalCoverage.updateBits(runCoverage);
 
         if (result == Result.SUCCESS) {
@@ -665,7 +681,7 @@ public class ChainsCoverageGuidance implements Guidance {
                 LinearInput linearInput = (LinearInput) currentInput;
                 // Attempt to get a value from the list, or else generate a random value
                 int ret = linearInput.getOrGenerateFresh(bytesRead++, random);
-                // infoLog("read(%d) = %d", bytesRead, ret);
+                infoLog("read(%d) = %d", bytesRead, ret);
                 return ret;
             }
         };

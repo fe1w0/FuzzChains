@@ -1,6 +1,5 @@
 package xyz.xzaslxr.driver;
 
-
 import edu.berkeley.cs.jqf.fuzz.ei.ZestGuidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.Guidance;
 import edu.berkeley.cs.jqf.fuzz.junit.GuidedFuzzing;
@@ -14,12 +13,8 @@ import xyz.xzaslxr.guidance.ReproGuidance;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.time.Duration;
 import java.util.*;
-
-import static edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader.stringsToUrls;
 
 /**
  * <p>This Class is a driver to run FuzzChains-DirectedGuidance, and inspired by this article <a href="https://github.com/rohanpadhye/JQF/issues/102">GuidedFuzzing.run does not collect coverage when run a second time in same program</a>
@@ -66,6 +61,7 @@ public class FuzzChainsDriver {
         String fuzzTime = "10s";
         String isSkipException = "false";
         String fuzzGuidance = "ZEST";
+        // String fuzzMode = "chains";
         String fuzzMode = "chains";
         String outputDirectoryName = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/";
         String testClassName = FuzzChainsTest.class.getName();
@@ -74,7 +70,7 @@ public class FuzzChainsDriver {
 
         String inputFilePath = null;
 
-        Long trials = 10L;
+        Long trials = 100L;
 
         String fuzzTargetDirectory = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/targets/xyz-xzaslxr-1.0.jar";
 

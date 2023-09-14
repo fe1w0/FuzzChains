@@ -109,7 +109,7 @@ public class LinearInput extends Input<Integer> {
                 int offset = random.nextInt(newInput.values.size());
                 int mutationSize = sampleGeometric(random, MEAN_MUTATION_SIZE);
 
-                // desc += String.format(":%d@%d", mutationSize, idx);
+                desc += String.format(":%d@%d", mutationSize, offset);
 
                 // Mutate a contiguous set of bytes from offset
                 for (int i = offset; i < offset + mutationSize; i++) {
