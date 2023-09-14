@@ -1,9 +1,6 @@
 package xyz.xzaslxr.utils.coverage;
 
-import edu.berkeley.cs.jqf.fuzz.util.Counter;
-import edu.berkeley.cs.jqf.fuzz.util.Coverage;
-import edu.berkeley.cs.jqf.fuzz.util.ICoverage;
-import edu.berkeley.cs.jqf.fuzz.util.NonZeroCachingCounter;
+import edu.berkeley.cs.jqf.fuzz.util.*;
 import edu.berkeley.cs.jqf.instrument.tracing.events.*;
 import org.eclipse.collections.api.iterator.IntIterator;
 import org.eclipse.collections.api.list.primitive.IntList;
@@ -28,32 +25,31 @@ public class ChainsCoverage extends Coverage {
     /** The coverage counts for each edge. */
     private final Counter counter = new NonZeroCachingCounter(COVERAGE_MAP_SIZE);
 
-    public Counter getChainsCodeCounter() {
-        return chainsCodeCounter;
-    }
-
     /**
      * The hashCode counts for the method name of each edge.
      */
     private final Counter chainsCodeCounter = new NonZeroCachingCounter(COVERAGE_MAP_SIZE);
 
 
+    public Counter getChainsCodeCounter() {
+        return chainsCodeCounter;
+    }
+
     /**
-     * 计算 this.chainsCodeCounter in chainPaths
+     * 计算 chainPaths 和 this.chainsCodeCounter 的交集，
+     * 同时该计算输出为 Hashing.hash(pathCode, COVERAGE_MAP_SIZE);
      * @param chainPaths
      * @return
      */
     public IntList computeCoveredChainsPath(Map<Integer, String> chainPaths) {
         IntArrayList result = new IntArrayList();
 
-        IntList currentPaths = this.chainsCodeCounter.getNonZeroIndices();
-
-        currentPaths.forEach(num -> {
-            if (chainPaths.containsKey(num)) {
-                result.add(num);
+        for (int pathCode : chainPaths.keySet()) {
+            int hashNumber = Hashing.hash(pathCode, COVERAGE_MAP_SIZE);
+            if (this.chainsCodeCounter.getAtIndex(hashNumber) != 0) {
+                result.add(hashNumber);
             }
-        });
-
+        }
         return result;
     }
 
@@ -123,6 +119,29 @@ public class ChainsCoverage extends Coverage {
         // hashCodeCounter 中添加 getContainingMethodName.hashCode
         chainsCodeCounter.increment(getEventMethodName(b).hashCode());
     }
+
+    /**
+     * 根据当前的runCoverage, 刷新ChainsCoverage
+     * @param runCoverage
+     * @return
+     */
+    public boolean updateChainsBits(ChainsCoverage runCoverage) {
+        boolean changed = false;
+        if (runCoverage.getChainsCodeCounter().hasNonZeros()) {
+            for (int idx = 0; idx < COVERAGE_MAP_SIZE; idx++) {
+                int before = this.chainsCodeCounter.getAtIndex(idx);
+                int after = runCoverage.getChainsCodeCounter().getAtIndex(idx);
+                if (after != before) {
+                    // 应该是为了加速分析
+                    // int after = before | hob(that.getCounter().getAtIndex(idx));
+                    this.chainsCodeCounter.setAtIndex(idx, after);
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
 
     /**
      * 获得 非0的空间大小

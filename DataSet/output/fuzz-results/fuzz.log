@@ -1,51 +1,51 @@
 Spawning new input from thin air
-read(1) = 194
-read(2) = 255
-read(3) = 242
-read(4) = 168
-read(5) = 133
-read(6) = 239
-read(7) = 15
-read(8) = 126
-Saved - /Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/corpus/id_000000 random +count +cov +valid
-Mutating input: random:1@6:1@7:3@4:1@3:4@4	newInput: src:000000,havoc:5
-read(1) = 194
-read(2) = 255
-read(3) = 242
-read(4) = 18
-read(5) = 107
-read(6) = 189
-read(7) = 178
-read(8) = 182
-Saved - /Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/corpus/id_000001 src:000000,havoc:5 +count +cov +valid
-Mutating input: random:1@6:1@7:3@4:1@3:4@4:2@5:6@5:3@3:3@7:3@1:2@5:1@3	newInput: src:000000,havoc:7
-read(1) = 194
-read(2) = 199
-read(3) = 122
-read(4) = 36
-read(5) = 12
-read(6) = 139
-read(7) = 84
-read(8) = 173
-Saved - /Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/corpus/id_000002 src:000000,havoc:7 +count
-Mutating input: random:1@6:1@7:3@4:1@3:4@4:2@5:6@5:3@3:3@7:3@1:2@5:1@3:2@2:1@6	newInput: src:000000,havoc:2
-read(1) = 194
-read(2) = 255
-read(3) = 3
-read(4) = 87
-read(5) = 133
-read(6) = 239
-read(7) = 162
-read(8) = 126
-Saved - /Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/corpus/id_000003 src:000000,havoc:2 +count
-Mutating input: random:1@6:1@7:3@4:1@3:4@4:2@5:6@5:3@3:3@7:3@1:2@5:1@3:2@2:1@6:3@1:6@6:4@4:14@6:3@5:1@3:12@2:5@2:2@6:2@7:2@7	newInput: src:000000,havoc:11
-read(1) = 194
-read(2) = 185
-read(3) = 93
-read(4) = 244
-read(5) = 19
-read(6) = 221
-read(7) = 184
-read(8) = 7
+read(1) = 207
+read(2) = 33
+read(3) = 181
+read(4) = 154
+read(5) = 185
+read(6) = 207
+read(7) = 72
+read(8) = 138
 Found crash: class xyz.xzaslxr.fuzzing.FuzzException - This Object is Exploitable.
-Saved - /Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/failures/id_000000 src:000000,havoc:11 +crash
+Saved - /Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/failures/id_000000 random +crash
+Spawning new input from thin air
+read(1) = 164
+read(2) = 131
+read(3) = 131
+read(4) = 231
+read(5) = 52
+read(6) = 27
+read(7) = 37
+read(8) = 30
+Saved - /Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/corpus/id_000000 random +count +cov +newChains +valid
+-- Assuming new responsibility for 0
+-- Assuming new responsibility for 42045
+-- Assuming new responsibility for 57314
+-- Assuming new responsibility for 54287
+-- Assuming new responsibility for 16592
+-- Assuming new responsibility for 11253
+-- Assuming new responsibility for 38695
+-- Assuming new responsibility for 63382
+-- Assuming new responsibility for 16527
+-- Assuming new responsibility for 32989
+-- Assuming new responsibility for 11036
+-- Assuming new responsibility for 35996
+-- Assuming new responsibility for 48792
+-- Assuming new responsibility for 10406
+-- Assuming new responsibility for 58225
+-- Assuming new responsibility for 64244
+-- Assuming new responsibility for 4830
+-- Assuming new responsibility for 60192
+-- Assuming new responsibility for 48166
+-- Assuming new responsibility for 778
+-- Assuming new responsibility for 39110
+Mutating input: random:2@0	newInput: src:000000,havoc:1
+read(1) = 57
+read(2) = 230
+read(3) = 131
+read(4) = 231
+read(5) = 52
+read(6) = 27
+read(7) = 37
+read(8) = 30

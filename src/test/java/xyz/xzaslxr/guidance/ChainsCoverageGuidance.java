@@ -150,6 +150,7 @@ public class ChainsCoverageGuidance implements Guidance {
 
     // --------- Debug and Logging ---------
 
+    /** Number of conditional jumps since last run was started. */
     protected long branchCount = 0;
 
     /**
@@ -314,10 +315,6 @@ public class ChainsCoverageGuidance implements Guidance {
 
         this.logFile = new File(outputDirectory, "fuzz.log");
 
-        // Delete everything that we may have created in a previous run.
-        // Trying to stay away from recursive delete of parent output directory in case there was a
-        // typo and that was not a directory we wanted to nuke.
-        // We also do not check if the deletes are actually successful.
         logFile.delete();
         for (File file : savedCorpusDirectory.listFiles()) {
             file.delete();
@@ -325,7 +322,6 @@ public class ChainsCoverageGuidance implements Guidance {
         for (File file : savedFailuresDirectory.listFiles()) {
             file.delete();
         }
-
     }
 
 
@@ -416,7 +412,6 @@ public class ChainsCoverageGuidance implements Guidance {
                 Input parent = savedInputs.get(currentParentInputIdx);
 
                 // Fuzz it to get a new input
-                // Mutate Input, 对象是 parent
                 currentInput = parent.fuzz(random);
 
                 infoLog("Mutating input: %s", parent.desc + "\tnewInput: " + currentInput.desc);
@@ -424,17 +419,8 @@ public class ChainsCoverageGuidance implements Guidance {
                 // numChildrenGeneratedForCurrentParentInput 自增
                 numChildrenGeneratedForCurrentParentInput++;
 
-                // Write it to disk for debugging
-                // try {
-                //     writeCurrentInputToFile(currentInputFile);
-                // } catch (IOException ignore) {
-                // }
-
-                // Start time-counting for timeout handling
-
                 // 细节：
                 // 第一次执行时，原 Zest 算法不会产生新的runStart
-                //
                 this.runStart = new Date();
 
                 // handleEvent时，会 ++this.branchCount
@@ -499,10 +485,7 @@ public class ChainsCoverageGuidance implements Guidance {
                     final String reason = why;
 
                     GuidanceException.wrap(() -> saveCurrentInput(responsibilities, reason));
-
-                    // Update coverage information
-                    // updateCoverageFile();
-                    }
+                }
             } else if (result == Result.FAILURE || result == Result.TIMEOUT) {
                 // 需要注意的是:
                 // 区别 FuzzException 和 其他 Exception 的区别
@@ -529,20 +512,34 @@ public class ChainsCoverageGuidance implements Guidance {
                     String how = currentInput.desc;
                     String why = result == Result.FAILURE ? "+crash" : "+hang";
                     infoLog("Saved - %s %s %s", saveFile.getPath(), how, why);
-
-                    // if (EXACT_CRASH_PATH != null && !EXACT_CRASH_PATH.equals("")) {
-                    //     File exactCrashFile = new File(EXACT_CRASH_PATH);
-                    //     GuidanceException.wrap(() -> writeCurrentInputToFile(exactCrashFile));
-                    // }
                 }
+            }
+        });
+    }
 
-                // Save input unconditionally if such a setting is enabled
-                // 暂时保存所有信息
-                if ((!SAVE_ONLY_VALID || valid)) {
-                    File logDirectory = new File(allInputsDirectory, result.toString().toLowerCase());
-                    String saveFileName = String.format("id_%09d", numTrials);
-                    File saveFile = new File(logDirectory, saveFileName);
-                    GuidanceException.wrap(() -> writeCurrentInputToFile(saveFile));
+    // -------- Handle Events --------
+
+    /**
+     * Handles a trace event generated during test execution.
+     * <p>handleEvent: 处理Event的过程中，会对 totalCoverage 等信息进行更新</p>
+     *
+     * Not used by FastNonCollidingCoverage, which does not allocate an
+     * instance of TraceEvent at each branch probe execution.
+     *
+     * @param e the trace event to be handled
+     */
+    protected void handleEvent(TraceEvent e) {
+        conditionallySynchronize(multiThreaded, () -> {
+            // Collect totalCoverage and ChainsCoverage
+            ((ChainsCoverage) runCoverage).handleEvent(e);
+            // 修改 issue
+            ++this.branchCount;
+            // Check for possible timeouts every so often
+            if (this.singleRunTimeoutMillis > 0 &&
+                    this.runStart != null && (this.branchCount) % 10_000 == 0) {
+                long elapsed = new Date().getTime() - runStart.getTime();
+                if (elapsed > this.singleRunTimeoutMillis) {
+                    throw new TimeoutException(elapsed, this.singleRunTimeoutMillis);
                 }
             }
         });
@@ -551,10 +548,9 @@ public class ChainsCoverageGuidance implements Guidance {
     // ------- Handle Result -------
 
     /**
-     * computeResponsibilities 的计算结果为，(runCoverage - totalCoverage) and (runCoverage - validCoverage) and (runCoverage - validCoverage)
-     *
+     * return:
      * <p>
-     *     Todo: 可以优化
+     *     (runCoverage - (totalCoverage + validCoverage) + coveredChainsMethod)
      * </p>
      *
      * @param valid
@@ -577,8 +573,8 @@ public class ChainsCoverageGuidance implements Guidance {
             }
         }
 
-        // Todo: 测试可行性
-        IntList newChainsCoverage = runCoverage.computeNewCoverage(chainsCoverage);
+        // 计算当前 runCoverage中覆盖了哪些 ChainsPath
+        IntList newChainsCoverage = ((ChainsCoverage)runCoverage).computeCoveredChainsPath(chainPaths);
         if (!newChainsCoverage.isEmpty()) {
             result.addAll(newChainsCoverage);
         }
@@ -588,7 +584,7 @@ public class ChainsCoverageGuidance implements Guidance {
     }
 
     /**
-     * 返回 reasonsToSave，返回更新的原因
+     * 返回更新的原因
      * @param result
      * @return
      */
@@ -602,7 +598,7 @@ public class ChainsCoverageGuidance implements Guidance {
         // 之前，ChainsCoverage的Edges数量
         int chainsNoeZeroBefore = chainsCoverage.getNonZeroCount();
 
-        // Todo:
+
         boolean coverageBitsUpdated = totalCoverage.updateBits(runCoverage);
 
         if (result == Result.SUCCESS) {
@@ -610,8 +606,8 @@ public class ChainsCoverageGuidance implements Guidance {
         }
 
         // Todo: 添加 chainsCoverage.updateBits
-        // 当发现新的且有效的chainCoverage时，刷新chainsCoverage？
-
+        // 当发现新的且有效的chainCoverage时，刷新chainsCoverage
+        boolean chainsCoverageBitsUpdate = ((ChainsCoverage)chainsCoverage).updateChainsBits((ChainsCoverage) runCoverage);
 
         // Coverage after
         int nonZeroAfter = totalCoverage.getNonZeroCount();
@@ -632,6 +628,10 @@ public class ChainsCoverageGuidance implements Guidance {
             reasonsToSave.add("+cov");
         }
 
+        if (chainsCoverageBitsUpdate) {
+            reasonsToSave.add("+newChains");
+        }
+
         // Save if new valid coverage is found
         if (this.validityFuzzing && validNonZeroAfter > validNonZeroBefore) {
             reasonsToSave.add("+valid");
@@ -639,19 +639,6 @@ public class ChainsCoverageGuidance implements Guidance {
 
         return reasonsToSave;
     }
-
-
-    /** Updates the data in the coverage file */
-    // protected void updateCoverageFile() {
-    //     try {
-    //         PrintWriter pw = new PrintWriter(coverageFile);
-    //         pw.println(getTotalCoverage().toString());
-    //         pw.println("Hash code: " + getTotalCoverage().hashCode());
-    //         pw.close();
-    //     } catch (FileNotFoundException ignore) {
-    //         throw new GuidanceException(ignore);
-    //     }
-    // }
 
     // -------- Stats --------
 
@@ -748,11 +735,11 @@ public class ChainsCoverageGuidance implements Guidance {
             // subsume it
             Input oldResponsible = responsibleInputs.get(b);
             if (oldResponsible != null) {
+                // 刷新责任对象，由新的responsibleInput来负责这个b
                 oldResponsible.responsibilities.remove(b);
-                // infoLog("-- Stealing responsibility for %s from input %d", b,
-                // oldResponsible.id);
+                infoLog("-- Stealing responsibility for %s from input %d", b, oldResponsible.id);
             } else {
-                // infoLog("-- Assuming new responsibility for %s", b);
+                infoLog("-- Assuming new responsibility for %s", b);
             }
             // We are now responsible
             responsibleInputs.put(b, currentInput);
@@ -774,6 +761,7 @@ public class ChainsCoverageGuidance implements Guidance {
     // --------- Handle Exception ------
 
     private static MessageDigest sha1;
+
 
     private static String failureDigest(StackTraceElement[] stackTrace) {
         if (sha1 == null) {
@@ -847,32 +835,6 @@ public class ChainsCoverageGuidance implements Guidance {
 
         // Break log after cycle
         infoLog("\n\n\n");
-    }
-
-    // -------- Handle Events --------
-
-    /**
-     * Handles a trace event generated during test execution.
-     * <p>handleEvent: 处理Event的过程中，会对 totalCoverage 等信息进行更新</p>
-     *
-     * Not used by FastNonCollidingCoverage, which does not allocate an
-     * instance of TraceEvent at each branch probe execution.
-     *
-     * @param e the trace event to be handled
-     */
-    protected void handleEvent(TraceEvent e) {
-        conditionallySynchronize(multiThreaded, () -> {
-            // Collect totalCoverage
-            ((ChainsCoverage) runCoverage).handleEvent(e);
-            // Check for possible timeouts every so often
-            if (this.singleRunTimeoutMillis > 0 &&
-                    this.runStart != null && (++this.branchCount) % 10_000 == 0) {
-                long elapsed = new Date().getTime() - runStart.getTime();
-                if (elapsed > this.singleRunTimeoutMillis) {
-                    throw new TimeoutException(elapsed, this.singleRunTimeoutMillis);
-                }
-            }
-        });
     }
 
     // -------- Debug and Log --------
