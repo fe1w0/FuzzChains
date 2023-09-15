@@ -11,6 +11,7 @@ import edu.berkeley.cs.jqf.instrument.tracing.events.TraceEvent;
 import org.eclipse.collections.api.iterator.IntIterator;
 import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
+import xyz.xzaslxr.fuzzing.FuzzException;
 import xyz.xzaslxr.utils.coverage.ChainsCoverage;
 import xyz.xzaslxr.utils.setting.ChainPaths;
 import xyz.xzaslxr.utils.setting.ReadChainPathsConfigure;
@@ -89,6 +90,8 @@ public class ChainsCoverageGuidance implements Guidance {
      * </p>
      * */
     protected Set<String> uniqueFailures = new HashSet<>();
+
+    public int failures;
 
     // ---------- Fuzzing Input and Coverage ----------
 
@@ -354,6 +357,9 @@ public class ChainsCoverageGuidance implements Guidance {
             return true;
         } else {
             displayStats(true);
+            infoLog("failures: %d", failures);
+            infoLog("numTrials: %s", numTrials);
+            infoLog("effectiveness: %d", numTrials/failures);
             return false;
         }
     }
@@ -503,6 +509,10 @@ public class ChainsCoverageGuidance implements Guidance {
                 Throwable rootCause = error;
                 while (rootCause.getCause() != null) {
                     rootCause = rootCause.getCause();
+                }
+
+                if (rootCause instanceof FuzzException) {
+                    failures++;
                 }
 
                 // Attempt to add this to the set of unique failures

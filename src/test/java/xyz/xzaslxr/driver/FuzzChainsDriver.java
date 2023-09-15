@@ -58,7 +58,7 @@ public class FuzzChainsDriver {
     public static void main(String[] args) throws IOException {
         // 设置启动参数
 
-        String fuzzTime = "4s";
+        String fuzzTime = "3s";
         String isSkipException = "false";
         String fuzzGuidance = "ZEST";
         // String fuzzMode = "chains"; report
