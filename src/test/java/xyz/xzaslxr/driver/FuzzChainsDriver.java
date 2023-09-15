@@ -58,10 +58,10 @@ public class FuzzChainsDriver {
     public static void main(String[] args) throws IOException {
         // 设置启动参数
 
-        String fuzzTime = "30s";
+        String fuzzTime = "4s";
         String isSkipException = "false";
         String fuzzGuidance = "ZEST";
-        // String fuzzMode = "chains";
+        // String fuzzMode = "chains"; report
         String fuzzMode = "chains";
         String outputDirectoryName = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/";
         String testClassName = FuzzChainsTest.class.getName();
@@ -70,7 +70,7 @@ public class FuzzChainsDriver {
 
         String inputFilePath = null;
 
-        Long trials = 100L;
+        Long trials = 10_000L;
 
         String fuzzTargetDirectory = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/targets/xyz-xzaslxr-1.0.jar";
 

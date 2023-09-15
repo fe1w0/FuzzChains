@@ -33,7 +33,7 @@ mvn jqf:repro -Djqf.failOnDeclaredExceptions=true -Dclass=xyz.xzaslxr.fuzzing.Fu
       - [x] JQF
     - [x] 支持 根据 Property Trees 构造Fuzzing 种子
       - [x] propertyTreeNode
-    - [ ] 实现 Chains-Coverage Directed Fuzzing
+    - [x] 实现 Chains-Coverage Directed Fuzzing
       - 根据 example.jar 手工编写 paths.csv (1.0 版)
       - 编写新的 Guidance，从而实现 Chains-Coverage Directed Fuzzing
     - [x] 可以测试DataSet中的example

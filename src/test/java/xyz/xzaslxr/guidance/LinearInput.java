@@ -46,7 +46,7 @@ public class LinearInput extends Input<Integer> {
             // If it exists in the list, return it
             if (key < values.size()) {
                 requested++;
-                // infoLog("Returning old byte at key=%d, total requested=%d", key, requested);
+                infoLog("Returning old byte at key=%d, total requested=%d", key, requested);
                 return values.get(key);
             }
 
@@ -59,8 +59,7 @@ public class LinearInput extends Input<Integer> {
                 int val = random.nextInt(256);
                 values.add(val);
                 requested++;
-                // infoLog("Generating fresh byte at key=%d, total requested=%d", key,
-                // requested);
+                infoLog("Generating fresh byte at key=%d, total requested=%d", key, requested);
                 return val;
             }
         }
@@ -109,7 +108,7 @@ public class LinearInput extends Input<Integer> {
                 int offset = random.nextInt(newInput.values.size());
                 int mutationSize = sampleGeometric(random, MEAN_MUTATION_SIZE);
 
-                desc += String.format(":%d@%d", mutationSize, offset);
+                desc += String.format(":%d@%d", offset, mutationSize);
 
                 // Mutate a contiguous set of bytes from offset
                 for (int i = offset; i < offset + mutationSize; i++) {

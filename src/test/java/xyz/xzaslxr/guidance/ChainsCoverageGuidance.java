@@ -4,6 +4,7 @@ import edu.berkeley.cs.jqf.fuzz.guidance.Guidance;
 import edu.berkeley.cs.jqf.fuzz.guidance.GuidanceException;
 import edu.berkeley.cs.jqf.fuzz.guidance.Result;
 import edu.berkeley.cs.jqf.fuzz.guidance.TimeoutException;
+import edu.berkeley.cs.jqf.fuzz.util.Coverage;
 import edu.berkeley.cs.jqf.fuzz.util.ICoverage;
 import edu.berkeley.cs.jqf.fuzz.util.IOUtils;
 import edu.berkeley.cs.jqf.instrument.tracing.events.TraceEvent;
@@ -112,9 +113,9 @@ public class ChainsCoverageGuidance implements Guidance {
     /** Coverage statistics for a single run. */
     protected ICoverage runCoverage = new ChainsCoverage();
 
-    protected ICoverage totalCoverage = new ChainsCoverage();
+    protected ICoverage totalCoverage = new Coverage();
 
-    protected ICoverage validCoverage = new ChainsCoverage();
+    protected ICoverage validCoverage = new Coverage();
 
     protected ICoverage chainsCoverage = new ChainsCoverage();
 
@@ -128,7 +129,11 @@ public class ChainsCoverageGuidance implements Guidance {
     /** Set of saved inputs to fuzz. */
     protected ArrayList<Input> savedInputs = new ArrayList<>();
 
-    /** Queue of seeds to fuzz. */
+    /** Queue of seeds to fuzz.
+     * <p>
+     *     seedInputs 只表示，一开始从SeedFile中生成PUT的Input
+     * </p>
+     */
     protected Deque<Input> seedInputs = new ArrayDeque<>();
 
     /**
@@ -164,10 +169,10 @@ public class ChainsCoverageGuidance implements Guidance {
     /**
      * 存储debug信息
      */
-    protected File logFile;
+    public static File logFile;
 
     /** Whether to print log statements to stderr (debug option; manually edit). */
-    protected final boolean verbose = true;
+    public static boolean verbose = true;
 
 
     /** The directory where fuzzing results are produced. */
@@ -222,12 +227,12 @@ public class ChainsCoverageGuidance implements Guidance {
      *     Baseline: 从ParentInput中生成ChildrenInput的数量
      * </p>
      * */
-    protected static final int NUM_CHILDREN_BASELINE = 50;
+    protected static final int NUM_CHILDREN_BASELINE = 4;
 
     /**
      * Multiplication factor for number of children to produce for favored inputs.
      */
-    protected static final int NUM_CHILDREN_MULTIPLIER_FAVORED = 20;
+    protected static final int NUM_CHILDREN_MULTIPLIER_FAVORED = 4;
 
     /** Mean number of mutations to perform in each round. */
     protected static final double MEAN_MUTATION_COUNT = 8.0;
@@ -285,6 +290,8 @@ public class ChainsCoverageGuidance implements Guidance {
         for (String path: tmpChainPaths.getPaths()) {
             this.chainPaths.put(path.hashCode(), path);
         }
+
+        runCoverage = new ChainsCoverage(chainPaths);
 
         prepareOutputDirectory();
 
@@ -532,11 +539,12 @@ public class ChainsCoverageGuidance implements Guidance {
         conditionallySynchronize(multiThreaded, () -> {
             // Collect totalCoverage and ChainsCoverage
             ((ChainsCoverage) runCoverage).handleEvent(e);
-            // 修改 issue
-            ++this.branchCount;
+
             // Check for possible timeouts every so often
+            // 只有当开启 单线程时间设置 和 存在启动时间时，
+            // 才会对 this.branchCount 进行自增计算
             if (this.singleRunTimeoutMillis > 0 &&
-                    this.runStart != null && (this.branchCount) % 10_000 == 0) {
+                    this.runStart != null && (++this.branchCount) % 10_000 == 0) {
                 long elapsed = new Date().getTime() - runStart.getTime();
                 if (elapsed > this.singleRunTimeoutMillis) {
                     throw new TimeoutException(elapsed, this.singleRunTimeoutMillis);
@@ -573,8 +581,8 @@ public class ChainsCoverageGuidance implements Guidance {
             }
         }
 
-        // 计算当前 runCoverage中覆盖了哪些 ChainsPath
-        IntList newChainsCoverage = ((ChainsCoverage)runCoverage).computeCoveredChainsPath(chainPaths);
+        // 计算当前 runCoverage 中覆盖了哪些新的 ChainsPath
+        IntList newChainsCoverage = ((ChainsCoverage)runCoverage).computeNewCoveredChainsPath(chainsCoverage);
         if (!newChainsCoverage.isEmpty()) {
             result.addAll(newChainsCoverage);
         }
@@ -595,9 +603,6 @@ public class ChainsCoverageGuidance implements Guidance {
         int nonZeroBefore = totalCoverage.getNonZeroCount();
         // 之前，ValidCoverage的Edges数量
         int validNonZeroBefore = validCoverage.getNonZeroCount();
-        // 之前，ChainsCoverage的Edges数量
-        int chainsNoeZeroBefore = chainsCoverage.getNonZeroCount();
-
 
         boolean coverageBitsUpdated = totalCoverage.updateBits(runCoverage);
 
@@ -725,7 +730,7 @@ public class ChainsCoverageGuidance implements Guidance {
 
         // Fourth, assume responsibility for branches
         currentInput.responsibilities = responsibilities;
-        if (responsibilities.size() > 0) {
+        if (!responsibilities.isEmpty()) {
             currentInput.setFavored();
         }
         IntIterator iter = responsibilities.intIterator();
@@ -823,7 +828,8 @@ public class ChainsCoverageGuidance implements Guidance {
                 numFavoredLastCycle++;
             }
         }
-        int totalCoverageCount = totalCoverage.getNonZeroCount();
+        int totalCoverageCount = totalCoverage.getNonZeroCount() + ((ChainsCoverage)chainsCoverage).getNonZeroChainsCount();
+        // int totalCoverageCount = totalCoverage.getNonZeroCount();
         infoLog("Total %d branches covered", totalCoverageCount);
         if (sumResponsibilities != totalCoverageCount) {
             if (multiThreaded) {
@@ -840,7 +846,7 @@ public class ChainsCoverageGuidance implements Guidance {
     // -------- Debug and Log --------
 
     /* Writes a line of text to the log file. */
-    protected void infoLog(String str, Object... args) {
+    public static void infoLog(String str, Object... args) {
         if (verbose) {
             String line = String.format(str, args);
             if (logFile != null) {
@@ -852,7 +858,7 @@ public class ChainsCoverageGuidance implements Guidance {
         }
     }
 
-    protected void appendLineToFile(File logFile, String line) {
+    public static void appendLineToFile(File logFile, String line) {
         try (PrintWriter printWriter = new PrintWriter(new FileWriter(logFile, true))){
             printWriter.println(line);
         } catch (IOException e) {

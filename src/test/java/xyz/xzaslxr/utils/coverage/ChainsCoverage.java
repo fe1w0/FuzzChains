@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author fe1w0
@@ -20,7 +21,7 @@ import java.util.Map;
 public class ChainsCoverage extends Coverage {
 
     /** The size of the coverage map. */
-    private final int COVERAGE_MAP_SIZE = (1 << 16) - 1; // Minus one to reduce collisions
+    public static int COVERAGE_MAP_SIZE = (1 << 16) - 1; // Minus one to reduce collisions
 
     /** The coverage counts for each edge. */
     private final Counter counter = new NonZeroCachingCounter(COVERAGE_MAP_SIZE);
@@ -31,42 +32,19 @@ public class ChainsCoverage extends Coverage {
     private final Counter chainsCodeCounter = new NonZeroCachingCounter(COVERAGE_MAP_SIZE);
 
 
+    protected Map<Integer, String> chainPaths = new ConcurrentHashMap<>();
+
+    public ChainsCoverage(){}
+
+    public ChainsCoverage(Map<Integer, String> chainPaths) {
+        this.chainPaths = chainPaths;
+    }
+
     public Counter getChainsCodeCounter() {
         return chainsCodeCounter;
     }
 
-    /**
-     * 计算 chainPaths 和 this.chainsCodeCounter 的交集，
-     * 同时该计算输出为 Hashing.hash(pathCode, COVERAGE_MAP_SIZE);
-     * @param chainPaths
-     * @return
-     */
-    public IntList computeCoveredChainsPath(Map<Integer, String> chainPaths) {
-        IntArrayList result = new IntArrayList();
 
-        for (int pathCode : chainPaths.keySet()) {
-            int hashNumber = Hashing.hash(pathCode, COVERAGE_MAP_SIZE);
-            if (this.chainsCodeCounter.getAtIndex(hashNumber) != 0) {
-                result.add(hashNumber);
-            }
-        }
-        return result;
-    }
-
-    @Override
-    public ChainsCoverage copy() {
-        ChainsCoverage ret = new ChainsCoverage();
-
-        for (int idx = 0; idx < COVERAGE_MAP_SIZE; idx++) {
-            ret.counter.setAtIndex(idx, this.counter.getAtIndex(idx));
-        }
-
-        for (int idx = 0; idx < COVERAGE_MAP_SIZE; idx++) {
-            ret.chainsCodeCounter.setAtIndex(idx, this.chainsCodeCounter.getAtIndex(idx));
-        }
-
-        return ret;
-    }
 
     /**
      * <p>
@@ -105,7 +83,9 @@ public class ChainsCoverage extends Coverage {
         super.visitCallEvent(e);
 
         // hashCodeCounter 中添加 invokedMethodName.hashCode
-        chainsCodeCounter.increment(getEventMethodName(e).hashCode());
+        if (this.chainPaths.containsKey(getEventMethodName(e).hashCode())) {
+            chainsCodeCounter.increment(getEventMethodName(e).hashCode());
+        }
     }
 
     /**
@@ -116,12 +96,68 @@ public class ChainsCoverage extends Coverage {
     public void visitBranchEvent(BranchEvent b) {
         super.visitBranchEvent(b);
 
-        // hashCodeCounter 中添加 getContainingMethodName.hashCode
-        chainsCodeCounter.increment(getEventMethodName(b).hashCode());
+        // hashCodeCounter 中添加 invokedMethodName.hashCode
+        if (this.chainPaths.containsKey(getEventMethodName(b).hashCode())) {
+            this.chainsCodeCounter.increment(getEventMethodName(b).hashCode());
+        }
     }
 
     /**
-     * 根据当前的runCoverage, 刷新ChainsCoverage
+     * this对象为: runCoverage，需要计算出触发的新函数
+     * @param baseline
+     * @return
+     */
+    public IntList computeNewCoveredChainsPath(ICoverage baseline) {
+        IntArrayList newCoverage = new IntArrayList();
+
+        IntList baseNonZero = this.chainsCodeCounter.getNonZeroIndices();
+        IntIterator iter = baseNonZero.intIterator();
+        while (iter.hasNext()) {
+            int idx = iter.next();
+            if (((ChainsCoverage)baseline).getChainsCodeCounter().getAtIndex(idx) == 0) {
+                newCoverage.add(idx);
+            }
+        }
+        return newCoverage;
+    }
+
+    @Override
+    public ChainsCoverage copy() {
+        ChainsCoverage ret = new ChainsCoverage();
+
+        for (int idx = 0; idx < COVERAGE_MAP_SIZE; idx++) {
+            ret.counter.setAtIndex(idx, this.counter.getAtIndex(idx));
+        }
+
+        for (int idx = 0; idx < COVERAGE_MAP_SIZE; idx++) {
+            ret.chainsCodeCounter.setAtIndex(idx, this.chainsCodeCounter.getAtIndex(idx));
+        }
+
+        ret.chainPaths = this.chainPaths;
+
+        return ret;
+    }
+
+    @Override
+    public boolean updateBits(ICoverage that) {
+        boolean changed = false;
+        if (that.getCounter().hasNonZeros()) {
+            for (int idx = 0; idx < COVERAGE_MAP_SIZE; idx++) {
+                int before = this.counter.getAtIndex(idx);
+                int after = before | hob(that.getCounter().getAtIndex(idx));
+                if (after != before) {
+                    this.counter.setAtIndex(idx, after);
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    /**
+     * Todo: 存在问题，当前 before = 1 && after = 0
+     *
+     * 根据当前的runCoverage, 刷新 ChainsCoverage
      * @param runCoverage
      * @return
      */
@@ -130,10 +166,8 @@ public class ChainsCoverage extends Coverage {
         if (runCoverage.getChainsCodeCounter().hasNonZeros()) {
             for (int idx = 0; idx < COVERAGE_MAP_SIZE; idx++) {
                 int before = this.chainsCodeCounter.getAtIndex(idx);
-                int after = runCoverage.getChainsCodeCounter().getAtIndex(idx);
+                int after = before | hob(runCoverage.getChainsCodeCounter().getAtIndex(idx));
                 if (after != before) {
-                    // 应该是为了加速分析
-                    // int after = before | hob(that.getCounter().getAtIndex(idx));
                     this.chainsCodeCounter.setAtIndex(idx, after);
                     changed = true;
                 }
@@ -141,7 +175,6 @@ public class ChainsCoverage extends Coverage {
         }
         return changed;
     }
-
 
     /**
      * 获得 非0的空间大小
@@ -166,5 +199,39 @@ public class ChainsCoverage extends Coverage {
     public void clear() {
         this.counter.clear();
         this.chainsCodeCounter.clear();
+    }
+
+    // ----------- Cache -----------
+
+    private static final int[] HOB_CACHE = new int[1024];
+
+    /* Computes the highest order bit */
+    private static int computeHob(int num)
+    {
+        if (num == 0)
+            return 0;
+
+        int ret = 1;
+
+        while ((num >>= 1) != 0)
+            ret <<= 1;
+
+        return ret;
+    }
+
+    /** Populates the HOB cache. */
+    static {
+        for (int i = 0; i < HOB_CACHE.length; i++) {
+            HOB_CACHE[i] = computeHob(i);
+        }
+    }
+
+    /** Returns the highest order bit (perhaps using the cache) */
+    private static int hob(int num) {
+        if (num < HOB_CACHE.length) {
+            return HOB_CACHE[num];
+        } else {
+            return computeHob(num);
+        }
     }
 }

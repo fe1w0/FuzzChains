@@ -3,6 +3,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+
+### FuzzChains ###
+/DataSet/output/fuzz-results/
+
 ### IntelliJ IDEA ###
 .idea
 .idea/modules.xml

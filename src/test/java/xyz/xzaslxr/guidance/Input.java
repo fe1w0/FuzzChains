@@ -111,11 +111,6 @@ public abstract class Input<K> implements Iterable<Integer> {
      * responsible.
      *
      * <p>
-     *     对于 ChainsCoverageGuidance 算法来说，responsibilities中存储的是
-     *     ChainsMethod，如对于`sources/dynamic/Reflect#handleMethod(Ljava/lang/String;)V`，则存储为该String对象的hashcode，即1268400041。
-     * </p>
-     *
-     * <p>
      * This field is null for inputs that are not saved.
      * </p>
      *
