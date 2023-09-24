@@ -170,6 +170,9 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
                 case "java.lang.Integer":
                     iProduct.fieldObject = random.nextInt(maxNumber);
                     break;
+                case "int":
+                    iProduct.fieldObject = random.nextInt(maxNumber);
+                    break;
 
                 case "java.lang.Long":
                     iProduct.fieldObject = random.nextLong();

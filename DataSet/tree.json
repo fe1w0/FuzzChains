@@ -1,30 +1,36 @@
 {
-  "label": "ROOT",
+  "label": null,
   "className": "sources.serialize.UnsafeSerialize",
   "fieldName": null,
   "fields": [
     {
-      "label": "ORDINARY",
-      "className": "sources.demo.ExpOne",
-      "fieldName": "chainOne",
+      "label": "ROOT",
+      "className": "sources.demo.ExpTwo",
+      "fieldName": "chainTwo",
       "fields": [
         {
           "label": "PRIORITY",
-          "className": "java.lang.Integer",
+          "className": "int",
           "fieldName": "size",
           "fields": []
         }
       ]
     },
     {
-      "label": "ORDINARY",
-      "className": "sources.demo.ExpTwo",
-      "fieldName": "chainTwo",
+      "label": "ROOT",
+      "className": "sources.demo.ExpOne",
+      "fieldName": "chainOne",
       "fields": [
         {
-          "label": "PRIORITY",
-            "className": "java.lang.Integer",
+          "label": "ORDINARY",
+          "className": "java.lang.Integer",
           "fieldName": "size",
+          "fields": []
+        },
+        {
+          "label": "ORDINARY",
+          "className": "sources.demo.ExpTwo",
+          "fieldName": "chainTwo",
           "fields": []
         }
       ]
