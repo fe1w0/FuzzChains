@@ -157,7 +157,7 @@ public class FuzzChainsTest {
     @Fuzz
     public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws Exception {
         // Todo: 参数可控 - rootPath
-        String saveFilePath = outputDirectoryName + "poc.ser";
+        String saveFilePath = outputDirectoryName + "/poc.ser";
 
         ByteArrayOutputStream copyOutputStream = copyByteArrayInputStream(inputStream);
 
@@ -205,7 +205,7 @@ public class FuzzChainsTest {
             throw new FuzzException("This Object is Exploitable.");
         } else {
             assumeFalse(true);
-            saveFilePath = outputDirectoryName + "no-poc.ser";
+            saveFilePath = outputDirectoryName + "/no-poc.ser";
             saveByteArrayInputStream(saveFilePath, saveStream);
         }
     }

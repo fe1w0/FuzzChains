@@ -22,16 +22,16 @@ import java.util.*;
  */
 @CommandLine.Command(name = "FuzzChains", version = "FuzzChains 1.0", mixinStandardHelpOptions = true)
 public class FuzzChainsDriver implements Runnable {
-    @CommandLine.Option(names = {"--target-file"}, required = true, description = "TargetFile: TargetFile will be included by InstrumentedClassLoader, only one Jar file is supported.")
+    @CommandLine.Option(names = {"-f", "--target-file"}, required = true, description = "TargetFile: TargetFile will be included by InstrumentedClassLoader, only one Jar file is supported.")
     public static String fuzzTargetFile;
 
-    @CommandLine.Option(names = {"--output-directory"}, required = true, description = "outputDirectory: includes poc.ser(under report mode), no-poc.ser(under report mode) and target/fuzz-report(under fuzz and chains modes).")
+    @CommandLine.Option(names = {"-o", "--output-directory"}, required = true, description = "outputDirectory: includes poc.ser(under report mode), no-poc.ser(under report mode) and target/fuzz-report(under fuzz and chains modes).")
     public static String outputDirectoryName;
 
-    @CommandLine.Option(names = {"--config-directory"}, description = "configDirectory: include tree.json and paths.csv.")
+    @CommandLine.Option(names = {"-c", "--config-directory"}, description = "configDirectory: include tree.json and paths.csv.")
     public static String configDirectory;
 
-    @CommandLine.Option(names = {"--report-input-directory"}, description = "should point to fuzz output files, and only used in report mode.")
+    @CommandLine.Option(names = {"-r", "--report-input-directory"}, description = "should point to fuzz output files, and only used in report mode.")
     public String inputFilePath;
 
     @CommandLine.Option(names = {"-t", "--timeout"}, defaultValue = "10s", description = "Maximum allowable execution time, default value is 10s.")
@@ -119,6 +119,9 @@ public class FuzzChainsDriver implements Runnable {
             if (fuzzMode.equals("fuzz")) {
                 guidance = new ZestGuidance(title, fuzzDuration, trials, outputDirectory, seedDirectories, random);
             } else if (fuzzMode.equals("report")) {
+                if (inputFilePath == null) {
+                    throw new IOException("not set inputFilePath");
+                }
                 File inputFile = new File(inputFilePath);
                 guidance = new ReproGuidance(inputFile, null);
             } else if (fuzzMode.equals("chains")) {
@@ -130,26 +133,24 @@ public class FuzzChainsDriver implements Runnable {
 
             if (guidance instanceof ZestGuidance) {
                 if (Boolean.getBoolean("jqf.logCoverage")) {
-                    System.out.println(String.format("Covered %d edges.",
-                            ((ZestGuidance) guidance).getTotalCoverage().getNonZeroCount()));
+                    System.out.printf("Covered %d edges.%n",
+                            ((ZestGuidance) guidance).getTotalCoverage().getNonZeroCount());
                 }
             } else if (guidance instanceof ChainsCoverageGuidance) {
                 if (Boolean.getBoolean("jqf.logCoverage")) {
-                    System.out.println(String.format("Covered %d edges.",
-                            ((ChainsCoverageGuidance) guidance).getTotalCoverage().getNonZeroCount()));
+                    System.out.printf("Covered %d edges.%n",
+                            ((ChainsCoverageGuidance) guidance).getTotalCoverage().getNonZeroCount());
                 }
             } else if (guidance instanceof ReproGuidance) {
-                if (logCoverage != null) {
-                    Set<String> coverageSet = ((ReproGuidance) guidance).getBranchesCovered();
-                    assert (coverageSet != null); // Should not happen if we set the system property above
-                    SortedSet<String> sortedCoverage = new TreeSet<>(coverageSet);
-                    try (PrintWriter covOut = new PrintWriter(new File(logCoverage))) {
-                        for (String b : sortedCoverage) {
-                            covOut.println(b);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                Set<String> coverageSet = ((ReproGuidance) guidance).getBranchesCovered();
+                assert (coverageSet != null);
+                SortedSet<String> sortedCoverage = new TreeSet<>(coverageSet);
+                try (PrintWriter covOut = new PrintWriter(new File(logCoverage))) {
+                    for (String b : sortedCoverage) {
+                        covOut.println(b);
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
 
