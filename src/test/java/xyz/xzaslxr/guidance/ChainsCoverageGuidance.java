@@ -359,7 +359,9 @@ public class ChainsCoverageGuidance implements Guidance {
             displayStats(true);
             infoLog("failures: %d", failures);
             infoLog("numTrials: %s", numTrials);
-            infoLog("effectiveness: %d", numTrials/failures);
+            if (failures != 0 ) {
+                infoLog("effectiveness: %d", numTrials/failures);
+            }
             return false;
         }
     }

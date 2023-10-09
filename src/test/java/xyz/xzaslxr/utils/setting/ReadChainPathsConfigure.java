@@ -5,12 +5,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+
 
 public class ReadChainPathsConfigure implements ReadConfiguration{
 
@@ -54,6 +51,11 @@ public class ReadChainPathsConfigure implements ReadConfiguration{
         }
     }
 
+
+    /**
+     * Testing
+     * @param args
+     */
     public static void main(String[] args) {
         String file = "DataSet/paths.csv";
         ReadChainPathsConfigure reader = new ReadChainPathsConfigure();

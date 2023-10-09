@@ -20,26 +20,37 @@ import java.util.*;
  * <p>This Class is a driver to run FuzzChains-DirectedGuidance, and inspired by this article <a href="https://github.com/rohanpadhye/JQF/issues/102">GuidedFuzzing.run does not collect coverage when run a second time in same program</a>
  * @author  <a href="https://github.com/fe1w0"> fe1w0</a>
  */
-@CommandLine.Command(name = "java -jar FuzzChains.jar")
-public class FuzzChainsDriver {
-    /**
-     * <p>FuzzChainsDriver-Cli has many arguments:
-     * <p>TargetFile: TargetFile will be included by InstrumentedClassLoader
-     * <p>FuzzTime: 50s
-     * <p>isSkipException: default is false, need to add a new JVM OPTION
-     * <p>FuzzGuidance: DirectedGuidance and other native guidance
-     * <p>FuzzMode: report and fuzz
-     * <p>outputDirectory: include poc.ser, no-poc.ser, target/fuzz-report
-     * <p>configDirectory: include propertyTree.json
-     * <p>InputDirectory: should point to fuzz output files, and only used in report mode.
-     */
+@CommandLine.Command(name = "FuzzChains", version = "FuzzChains 1.0", mixinStandardHelpOptions = true)
+public class FuzzChainsDriver implements Runnable {
+    @CommandLine.Option(names = {"--target-file"}, required = true, description = "TargetFile: TargetFile will be included by InstrumentedClassLoader, only one Jar file is supported.")
+    public static String fuzzTargetFile;
+
+    @CommandLine.Option(names = {"--output-directory"}, required = true, description = "outputDirectory: includes poc.ser(under report mode), no-poc.ser(under report mode) and target/fuzz-report(under fuzz and chains modes).")
+    public static String outputDirectoryName;
+
+    @CommandLine.Option(names = {"--config-directory"}, description = "configDirectory: include tree.json and paths.csv.")
+    public static String configDirectory;
+
+    @CommandLine.Option(names = {"--report-input-directory"}, description = "should point to fuzz output files, and only used in report mode.")
+    public String inputFilePath;
+
+    @CommandLine.Option(names = {"-t", "--timeout"}, defaultValue = "10s", description = "Maximum allowable execution time, default value is 10s.")
+    public String fuzzTime = "10s";
+
+    @CommandLine.Option(names = {"--skip-exception"}, description = "See: https://github.com/rohanpadhye/JQF/issues/196, allow FuzzChains to catch FuzzException.")
+    public boolean isSkipException = false;
+
+    @CommandLine.Option(names = {"-m", "--fuzz-mode"}, defaultValue = "chains", description = "FuzzMode: report, fuzz and chains.")
+    public String fuzzMode = "chains";
+
+    @CommandLine.Option(names = {"--trials"}, description = "The maximum number of tests allowed.")
+    public Long trials = 10_000L;
 
     public static ClassLoader fuzzClassLoader = null;
 
     public static List<String> getArtifacts(String targetDirectory) throws IOException {
-        List<String> classpathElements = new ArrayList<>(Arrays.asList(targetDirectory));
 
-        return classpathElements;
+        return new ArrayList<>(Collections.singletonList(targetDirectory));
     }
 
     public static void setUpClassLoader(String fuzzTargetDirectory) throws IOException {
@@ -48,47 +59,32 @@ public class FuzzChainsDriver {
 
         ClassLoader appClassLoader = ClassLoader.getSystemClassLoader();
 
-        ClassLoader classLoader = new InstrumentingClassLoader(
+        fuzzClassLoader = new InstrumentingClassLoader(
                 classpathElements.toArray(new String[0]),
                 appClassLoader);
-
-        fuzzClassLoader = classLoader;
     }
 
-    public static void main(String[] args) throws IOException {
-        // 设置启动参数
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new FuzzChainsDriver()).execute(args);
+        System.exit(exitCode);
+    }
 
-        String fuzzTime = "3s";
-        String isSkipException = "false";
-        String fuzzGuidance = "ZEST";
-        // String fuzzMode = "chains"; report
-        String fuzzMode = "chains";
-        String outputDirectoryName = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/";
+    @Override
+    public void run() {
+        String chainsConfigPath = configDirectory + "/paths.csv";
+
         String testClassName = FuzzChainsTest.class.getName();
+
         String testMethodName = null;
-        String chainsConfigPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/paths.csv";
-
-        String inputFilePath = null;
-
-        Long trials = 10_000L;
-
-        String fuzzTargetDirectory = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/targets/xyz-xzaslxr-1.0.jar";
-
-        // 设置 fuzz 模式:
-        // 1. fuzz
-        // 2. report
-        if (fuzzMode.equals("fuzz") || fuzzMode.equals("chains") ) {
+        if (fuzzMode.equals("fuzz") || fuzzMode.equals("chains")) {
             testMethodName = "fuzz";
         } else if (fuzzMode.equals("report")) {
             testMethodName = "reportFuzz";
-            // inputFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/corpus/id_000000";
-            inputFilePath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/fuzz-results/failures/id_000000";
-
             System.setProperty("jqf.repro.logUniqueBranches", "true");
         }
 
         // 设置 isSkipException
-        if (isSkipException.equals("false")) {
+        if (!isSkipException) {
             System.setProperty("jqf.failOnDeclaredExceptions", "true");
         } else {
             System.setProperty("jqf.failOnDeclaredExceptions", "false");
@@ -96,20 +92,22 @@ public class FuzzChainsDriver {
 
         System.setProperty("jqf.logCoverage", "true");
 
-        String logCoverage = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/output/coverage.out";
+        String logCoverage = outputDirectoryName + "/coverage.out";
         System.setProperty("logCoverageOutput", logCoverage);
 
 
         // 设置 ClassLoader
-        setUpClassLoader(fuzzTargetDirectory);
+        try {
+            setUpClassLoader(fuzzTargetFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // 需要检查输出文件夹的有效性
         File outputDirectory = new File(outputDirectoryName);
-
         File seedDirectories = null;
 
         Random random = new Random();
-
         try {
             // Load the guidance
             String title = testClassName + "#" + testMethodName;
@@ -118,7 +116,7 @@ public class FuzzChainsDriver {
 
             Guidance guidance = null;
 
-            if (fuzzMode.equals("fuzz") ) {
+            if (fuzzMode.equals("fuzz")) {
                 guidance = new ZestGuidance(title, fuzzDuration, trials, outputDirectory, seedDirectories, random);
             } else if (fuzzMode.equals("report")) {
                 File inputFile = new File(inputFilePath);
@@ -142,7 +140,7 @@ public class FuzzChainsDriver {
                 }
             } else if (guidance instanceof ReproGuidance) {
                 if (logCoverage != null) {
-                    Set<String> coverageSet = ((ReproGuidance)guidance).getBranchesCovered();
+                    Set<String> coverageSet = ((ReproGuidance) guidance).getBranchesCovered();
                     assert (coverageSet != null); // Should not happen if we set the system property above
                     SortedSet<String> sortedCoverage = new TreeSet<>(coverageSet);
                     try (PrintWriter covOut = new PrintWriter(new File(logCoverage))) {
@@ -158,9 +156,8 @@ public class FuzzChainsDriver {
             if (Boolean.getBoolean("jqf.ei.EXIT_ON_CRASH") && !res.wasSuccessful()) {
                 System.exit(3);
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 }

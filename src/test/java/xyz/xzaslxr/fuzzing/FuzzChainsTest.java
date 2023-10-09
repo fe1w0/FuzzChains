@@ -13,16 +13,11 @@ import java.net.URL;
 
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import xyz.xzaslxr.driver.FuzzChainsDriver;
 import xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator;
 
 import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
-import static xyz.xzaslxr.driver.FuzzChainsDriver.fuzzClassLoader;
-import static xyz.xzaslxr.driver.FuzzChainsDriver.setUpClassLoader;
+import static xyz.xzaslxr.driver.FuzzChainsDriver.*;
 import static xyz.xzaslxr.utils.generator.ByteArrayInputStreamGenerator.getFieldFromObject;
-
 
 /**
  * FuzzChains 用于Fuzzing libraries，主要与JQF进行交互。
@@ -43,8 +38,7 @@ public class FuzzChainsTest {
     @BeforeClass
     public static void setClassLoader() throws IOException {
         if (fuzzClassLoader == null) {
-           String fuzzTargetDirectory = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/targets/xyz-xzaslxr-1.0.jar";
-           setUpClassLoader(fuzzTargetDirectory);
+           setUpClassLoader(fuzzTargetFile);
         }
     }
 
@@ -81,8 +75,9 @@ public class FuzzChainsTest {
         }
 
         // 检验插桩， 若触发插桩，则 isExploitable = true;
-        Boolean isExploitable = outputStreamCaptor.toString().trim().contains(magicWords);
+        boolean isExploitable = outputStreamCaptor.toString().trim().contains(magicWords);
 
+        // Todo: 修改检测插桩的方式
         if (isExploitable) {
             // 对于 Poc 生成来说，需要 assumeFalse(false); 引导 POC 的生成
             assumeFalse(false);
@@ -95,9 +90,8 @@ public class FuzzChainsTest {
         URL url = getClass().getProtectionDomain().getCodeSource().getLocation();
         URI uri = url.toURI();
         File jarFile = new File(uri);
-        String jarFilePath = jarFile.getAbsolutePath();
 
-        return jarFilePath;
+        return jarFile.getAbsolutePath();
     }
 
     public void saveByteArrayInputStream(String filePath, ByteArrayInputStream byteArrayInputStream) {
@@ -162,8 +156,8 @@ public class FuzzChainsTest {
      */
     @Fuzz
     public void reportFuzz(@From(ByteArrayInputStreamGenerator.class) ByteArrayInputStream inputStream) throws Exception {
-        String rootPath = "DataSet/output/";
-        String saveFilePath = rootPath + "poc.ser";
+        // Todo: 参数可控 - rootPath
+        String saveFilePath = outputDirectoryName + "poc.ser";
 
         ByteArrayOutputStream copyOutputStream = copyByteArrayInputStream(inputStream);
 
@@ -211,7 +205,7 @@ public class FuzzChainsTest {
             throw new FuzzException("This Object is Exploitable.");
         } else {
             assumeFalse(true);
-            saveFilePath = rootPath + "no-poc.ser";
+            saveFilePath = outputDirectoryName + "no-poc.ser";
             saveByteArrayInputStream(saveFilePath, saveStream);
         }
     }

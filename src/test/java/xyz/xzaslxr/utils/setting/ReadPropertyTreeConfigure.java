@@ -1,8 +1,5 @@
 package xyz.xzaslxr.utils.setting;
 
-
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -30,6 +27,10 @@ public class ReadPropertyTreeConfigure implements ReadConfiguration{
         return null;
     }
 
+    /**
+     * Testing
+     * @param args
+     */
     public static void main(String[] args) {
         String configurationPath = "DataSet/tree.json";
 

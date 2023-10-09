@@ -115,7 +115,6 @@ public class PropertyTreeNode {
      * 若该object的所有成员变量都为`null`，则认为该object为空。
      * @return
      */
-
     public boolean isEmpty() {
         if (this.className == null && this.fieldName == null
                 && this.fields == null && this.label == null) {
@@ -125,6 +124,12 @@ public class PropertyTreeNode {
         }
     }
 
+
+    /**
+     * Testing
+     * @param args
+     * @throws JsonProcessingException
+     */
     public static void main(String[] args) throws JsonProcessingException {
 
         PropertyTreeNode sizeField = new PropertyTreeNode("PRIORITY", "java.lang.Integer", "size");

@@ -11,10 +11,10 @@ import xyz.xzaslxr.utils.setting.ReadPropertyTreeConfigure;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static xyz.xzaslxr.driver.FuzzChainsDriver.configDirectory;
 import static xyz.xzaslxr.driver.FuzzChainsDriver.fuzzClassLoader;
 
 
@@ -240,22 +240,6 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
         }
     }
 
-
-    public static void main(String[] args) {
-        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
-
-        ReadConfiguration reader = new ReadPropertyTreeConfigure();
-        PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());
-
-        ByteArrayInputStreamGenerator byteArrayInputStreamGenerator = new ByteArrayInputStreamGenerator();
-
-        IntermediateProduct iProduct = byteArrayInputStreamGenerator.generateFromPropertyTree(new SourceOfRandomness(new Random()), root);
-
-        System.out.println(root);
-
-    }
-
-
     @Override
     public ByteArrayInputStream generate(SourceOfRandomness random, GenerationStatus __ignore__) {
         // 获得 构造函数
@@ -271,7 +255,7 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
         System.setOut(new PrintStream(genOutputStreamCaptor));
 
         // 读取 PropertyTree 文件
-        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
+        String configurationPath = configDirectory + "/tree.json";
 
         ReadConfiguration reader = new ReadPropertyTreeConfigure();
         PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());
@@ -293,5 +277,18 @@ public class ByteArrayInputStreamGenerator extends Generator<ByteArrayInputStrea
         System.setOut(standardOut);
 
         return genByteArrayInputStream;
+    }
+
+    public static void main(String[] args) {
+        String configurationPath = "/Users/fe1w0/Project/SoftWareAnalysis/Dynamic/FuzzChains/DataSet/tree.json";
+
+        ReadConfiguration reader = new ReadPropertyTreeConfigure();
+        PropertyTreeNode root = reader.readConfiguration(configurationPath, new PropertyTreeNode());
+
+        ByteArrayInputStreamGenerator byteArrayInputStreamGenerator = new ByteArrayInputStreamGenerator();
+
+        IntermediateProduct iProduct = byteArrayInputStreamGenerator.generateFromPropertyTree(new SourceOfRandomness(new Random()), root);
+
+        System.out.println(root);
     }
 }
