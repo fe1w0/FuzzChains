@@ -3,6 +3,7 @@ package xyz.xzaslxr.fuzzing;
 import com.pholser.junit.quickcheck.From;
 import edu.berkeley.cs.jqf.fuzz.Fuzz;
 import edu.berkeley.cs.jqf.fuzz.JQF;
+import edu.berkeley.cs.jqf.instrument.InstrumentingClassLoader;
 import org.junit.After;
 import org.junit.Before;
 
@@ -33,13 +34,11 @@ public class FuzzChainsTest {
 
 
     /**
-     * 检验 FuzzChainsDriver 中的 ClassLoader
+     * 修改 fuzzClassLoader，并对 SinkMethod 进行插桩
      */
     @BeforeClass
-    public static void setClassLoader() throws IOException {
-        if (fuzzClassLoader == null) {
-           setUpClassLoader(fuzzTargetFile);
-        }
+    public static void instrument() {
+
     }
 
     @Before

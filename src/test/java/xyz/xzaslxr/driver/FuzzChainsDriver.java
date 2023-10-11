@@ -22,12 +22,15 @@ import java.util.*;
  */
 @CommandLine.Command(name = "FuzzChains", version = "FuzzChains 1.0", mixinStandardHelpOptions = true)
 public class FuzzChainsDriver implements Runnable {
+
+
     @CommandLine.Option(names = {"-f", "--target-file"}, required = true, description = "TargetFile: TargetFile will be included by InstrumentedClassLoader, only one Jar file is supported.")
     public static String fuzzTargetFile;
 
     @CommandLine.Option(names = {"-o", "--output-directory"}, required = true, description = "outputDirectory: includes poc.ser(under report mode), no-poc.ser(under report mode) and target/fuzz-report(under fuzz and chains modes).")
     public static String outputDirectoryName;
 
+    // Todo: 支持多种 tree.json 输入，并可以分配不同的能力
     @CommandLine.Option(names = {"-c", "--config-directory"}, description = "configDirectory: include tree.json and paths.csv.")
     public static String configDirectory;
 
@@ -55,6 +58,7 @@ public class FuzzChainsDriver implements Runnable {
 
     public static void setUpClassLoader(String fuzzTargetDirectory) throws IOException {
 
+        // Todo: 优化 setUpClassLoader ，支持 多Jar
         List<String> classpathElements = getArtifacts(fuzzTargetDirectory);
 
         ClassLoader appClassLoader = ClassLoader.getSystemClassLoader();

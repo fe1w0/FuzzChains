@@ -230,12 +230,12 @@ public class ChainsCoverageGuidance implements Guidance {
      *     Baseline: 从ParentInput中生成ChildrenInput的数量
      * </p>
      * */
-    protected static final int NUM_CHILDREN_BASELINE = 4;
+    protected static final int NUM_CHILDREN_BASELINE = 50;
 
     /**
      * Multiplication factor for number of children to produce for favored inputs.
      */
-    protected static final int NUM_CHILDREN_MULTIPLIER_FAVORED = 4;
+    protected static final int NUM_CHILDREN_MULTIPLIER_FAVORED = 20;
 
     /** Mean number of mutations to perform in each round. */
     protected static final double MEAN_MUTATION_COUNT = 8.0;
