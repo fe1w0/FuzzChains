@@ -63,7 +63,6 @@ public class FuzzChainsTest {
                         return Class.forName(desc.getName(), true, fuzzClassLoader);
                     } catch (Exception e) { }
 
-                    // Fall back (e.g. for primClasses)
                     return super.resolveClass(desc);
                 }
             };
