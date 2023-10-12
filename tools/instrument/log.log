@@ -1,19 +1,20 @@
-17:12:29.722 instrument.utils.CSVReader.convertDescription INFO: Prepare Instrumented Sinks: sources/demo/EvilObject#evil#(Ljava/lang/String;)V
-17:12:29.734 instrument.utils.JarModifier.newCode INFO: Instrument: sources/demo/EvilObject.evil (Ljava/lang/String;)V
-17:12:29.743 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETSTATIC owner=java/lang/System name=out desc=Ljava/io/PrintStream;
-17:12:29.746 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=FuzzChains@fe1w0
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/io/PrintStream name=println desc=(Ljava/lang/String;)V itf=false
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@41d477ed
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@3590fc5b
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETSTATIC owner=java/lang/System name=out desc=Ljava/io/PrintStream;
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=Eval
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/io/PrintStream name=println desc=(Ljava/lang/String;)V itf=false
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@397fbdb
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@33d512c1
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETSTATIC owner=java/lang/System name=out desc=Ljava/io/PrintStream;
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@515c6049
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/io/PrintStream name=println desc=(Ljava/lang/String;)V itf=false
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@639c2c1d
-17:12:29.751 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@5fe94a96
-17:12:29.752 instrument.utils.JarModifier.printInstructions INFO: InsnNode: RETURN
-17:12:29.770 instrument.Transform.run INFO: Finish Instrument.
+16:46:33.848 instrument.utils.CSVReader.convertDescription INFO: Prepare Instrumented Sinks: sources/demo/EvilObject#evil#(Ljava/lang/String;)V
+16:46:33.859 instrument.utils.JarModifier.newCode INFO: Instrument: sources/demo/EvilObject.evil (Ljava/lang/String;)V
+16:46:33.869 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETSTATIC owner=java/lang/System name=out desc=Ljava/io/PrintStream;
+16:46:33.872 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=FuzzChains@fe1w0
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/io/PrintStream name=println desc=(Ljava/lang/String;)V itf=false
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@33d512c1
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@515c6049
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETSTATIC owner=java/lang/System name=out desc=Ljava/io/PrintStream;
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=Eval
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/io/PrintStream name=println desc=(Ljava/lang/String;)V itf=false
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@639c2c1d
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@5fe94a96
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETSTATIC owner=java/lang/System name=out desc=Ljava/io/PrintStream;
+16:46:33.876 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@443118b0
+16:46:33.877 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/io/PrintStream name=println desc=(Ljava/lang/String;)V itf=false
+16:46:33.877 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@765d7657
+16:46:33.877 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@74235045
+16:46:33.878 instrument.utils.JarModifier.printInstructions INFO: InsnNode: RETURN
+16:46:33.878 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@3754a4bf
+16:46:33.896 instrument.Transform.run INFO: Finish Instrument.

@@ -37,7 +37,6 @@ public class JarModifier {
                             public void visitCode(){
                                 newCode();
                             }
-
                             public void newCode() {
                                 Logger.info("Instrument: {}.{} {}", cn.name, mn.name, mn.desc);
                                 mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");

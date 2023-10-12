@@ -5,7 +5,7 @@ target/
 
 
 ### FuzzChains ###
-/DataSet/fuzz
+DataSet/fuzz/
 
 ### tools ###
 tools/instrument/.idea
