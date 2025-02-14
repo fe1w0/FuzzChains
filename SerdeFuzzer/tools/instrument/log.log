@@ -1,0 +1,107 @@
+00:16:51.449 instrument.utils.CSVReader.convertDescription INFO: Prepare Instrumented Sinks: org/apache/commons/collections/functors/InvokerTransformer#transform#(Ljava/lang/Object;)Ljava/lang/Object;
+00:16:51.503 instrument.utils.JarModifier.newCode INFO: Instrument: org/apache/commons/collections/functors/InvokerTransformer.transform (Ljava/lang/Object;)Ljava/lang/Object;
+00:16:51.507 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETSTATIC owner=java/lang/System name=out desc=Ljava/io/PrintStream;
+00:16:51.508 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=FuzzChains@fe1w0
+00:16:51.511 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/io/PrintStream name=println desc=(Ljava/lang/String;)V itf=false
+00:16:51.511 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@5ccddd20
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@1ed1993a
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@1f3f4916
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.JumpInsnNode@794cb805
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@4b5a5ed1
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@59d016c9
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: InsnNode: ACONST_NULL
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: InsnNode: ARETURN
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@20d28811
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@3967e60c
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@60d8c9b7
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/Object name=getClass desc=()Ljava/lang/Class; itf=false
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@48aaecc3
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@7c0c77c7
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@7adda9cc
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@5cee5251
+00:16:51.512 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@433d61fb
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETFIELD owner=org/apache/commons/collections/functors/InvokerTransformer name=iMethodName desc=Ljava/lang/String;
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@5c909414
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETFIELD owner=org/apache/commons/collections/functors/InvokerTransformer name=iParamTypes desc=[Ljava/lang/Class;
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/Class name=getMethod desc=(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method; itf=false
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@4b14c583
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@65466a6a
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@4ddced80
+00:16:51.516 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@1534f01b
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@78e117e3
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@2ea227af
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETFIELD owner=org/apache/commons/collections/functors/InvokerTransformer name=iArgs desc=[Ljava/lang/Object;
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/reflect/Method name=invoke desc=(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: InsnNode: ARETURN
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@4386f16
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@363ee3a2
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@4690b489
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.TypeInsnNode@79b06cab
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: InsnNode: DUP
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.TypeInsnNode@3eb7fc54
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: InsnNode: DUP
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKESPECIAL owner=java/lang/StringBuffer name=<init> desc=()V itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=InvokerTransformer: The method '
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@7f552bd3
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETFIELD owner=org/apache/commons/collections/functors/InvokerTransformer name=iMethodName desc=Ljava/lang/String;
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=' on '
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@3c22fc4c
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/Object name=getClass desc=()Ljava/lang/Class; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/Object;)Ljava/lang/StringBuffer; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=' does not exist
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=toString desc=()Ljava/lang/String; itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKESPECIAL owner=org/apache/commons/collections/FunctorException name=<init> desc=(Ljava/lang/String;)V itf=false
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: InsnNode: ATHROW
+00:16:51.517 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@460d0a57
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@47d90b9e
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@1184ab05
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.TypeInsnNode@3aefe5e5
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: InsnNode: DUP
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.TypeInsnNode@149e0f5d
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: InsnNode: DUP
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKESPECIAL owner=java/lang/StringBuffer name=<init> desc=()V itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=InvokerTransformer: The method '
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@1b1473ab
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETFIELD owner=org/apache/commons/collections/functors/InvokerTransformer name=iMethodName desc=Ljava/lang/String;
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=' on '
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@2f7c2f4f
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/Object name=getClass desc=()Ljava/lang/Class; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/Object;)Ljava/lang/StringBuffer; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=' cannot be accessed
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=toString desc=()Ljava/lang/String; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKESPECIAL owner=org/apache/commons/collections/FunctorException name=<init> desc=(Ljava/lang/String;)V itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: InsnNode: ATHROW
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@6af93788
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LineNumberNode@ef9296d
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@36c88a32
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.TypeInsnNode@7880cdf3
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: InsnNode: DUP
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.TypeInsnNode@5be6e01c
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: InsnNode: DUP
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKESPECIAL owner=java/lang/StringBuffer name=<init> desc=()V itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=InvokerTransformer: The method '
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@1c93084c
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: FieldInsnNode: GETFIELD owner=org/apache/commons/collections/functors/InvokerTransformer name=iMethodName desc=Ljava/lang/String;
+00:16:51.518 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=' on '
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@6ef888f6
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/Object name=getClass desc=()Ljava/lang/Class; itf=false
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/Object;)Ljava/lang/StringBuffer; itf=false
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: LdcInsnNode: LDC cst=' threw an exception
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=append desc=(Ljava/lang/String;)Ljava/lang/StringBuffer; itf=false
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKEVIRTUAL owner=java/lang/StringBuffer name=toString desc=()Ljava/lang/String; itf=false
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.VarInsnNode@10e92f8f
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: MethodInsnNode: INVOKESPECIAL owner=org/apache/commons/collections/FunctorException name=<init> desc=(Ljava/lang/String;Ljava/lang/Throwable;)V itf=false
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: InsnNode: ATHROW
+00:16:51.519 instrument.utils.JarModifier.printInstructions INFO: org.objectweb.asm.tree.LabelNode@7ce3cb8e
+00:16:51.746 instrument.Transform.run INFO: Finish Instrument.
